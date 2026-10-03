@@ -18,7 +18,7 @@ const SUPABASE_URL =
 */
 
 const SUPABASE_KEY =
-  "sb_publishable_QL9UvmHtxzM9fvZAG8TFnw_UvpOEY3i";
+  "HIDENT";
 
 const supabaseClient =
   supabase.createClient(
@@ -350,13 +350,17 @@ function escapeHTML(value){
 
 /* =========================================================
    WORKER PHOTO
+   FIXED:
+   DATABASE COLUMN = "photo url"
 ========================================================= */
 
 function getWorkerPhoto(worker){
 
   const photo =
     String(
-      worker.photo_url || ""
+      worker["photo url"] ||
+      worker.photo_url ||
+      ""
     ).trim();
 
   if(photo){
@@ -872,7 +876,9 @@ function showWorkerProfile(
 
           ₹${escapeHTML(
             String(
-              worker.starting_charge ?? ""
+              worker["starting charge"] ??
+              worker.starting_charge ??
+              ""
             )
           )}
 
@@ -931,8 +937,6 @@ function showWorkerProfile(
         </a>
 
       </div>
-
-      <!-- ADDED: REQUEST SERVICE -->
 
       <button
         type="button"
@@ -2071,6 +2075,13 @@ function openWorkerRegistration(){
         /*
           CREATE WORKER
           Initially PENDING
+
+          IMPORTANT:
+          Exact database column:
+          "starting charge"
+
+          Exact database column:
+          "photo url"
         */
 
         const workerData = {
