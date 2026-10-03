@@ -9,924 +9,926 @@
 ========================================================= */
 
 const SUPABASE_URL =
-  "https://jprqqylhmwenshynrgtk.supabase.co";
-
-/*
-  IMPORTANT:
-  Yahan apni existing Publishable Key rakho.
-  Apni key mujhe send mat karna.
-*/
-
-const SUPABASE_KEY =
-  "sb_publishable_QL9UvmHtxzM9fvZAG8TFnw_UvpOEY3i";
-
-const supabaseClient =
-  supabase.createClient(
-    SUPABASE_URL,
-    SUPABASE_KEY
-  );
-
-
-/* =========================================================
-   ALL SERVICES
-========================================================= */
-
-const ALL_SERVICES = [
-
-  "AC Installation",
-  "AC Repair",
-  "AC Gas Filling",
-  "AC Service",
-  "AC Technician",
-
-  "Aluminium Worker",
-  "Appliance Repair",
-  "Auto Mechanic",
-
-  "Bathroom Cleaning",
-  "Beautician",
-  "Bike Mechanic",
-  "Bike Wash",
-
-  "Car Cleaning",
-  "Car Mechanic",
-  "Car Wash",
-  "Carpenter",
-  "CCTV Installation",
-  "CCTV Repair",
-  "Chimney Repair",
-  "Cleaner",
-  "Computer Repair",
-  "Computer Technician",
-  "Construction Worker",
-  "Cook",
-
-  "Dance Teacher",
-  "DTH Technician",
-
-  "Electrician",
-  "Electrician Helper",
-  "Event Decoration",
-
-  "Fabrication Worker",
-  "False Ceiling Worker",
-  "Fitness Trainer",
-  "Furniture Repair",
-
-  "Gardener",
-  "Gardening Service",
-  "Glass Worker",
-  "Geyser Repair",
-
-  "Home Cleaning",
-  "Home Tutor",
-
-  "Interior Designer",
-  "Internet Technician",
-  "Inverter Repair",
-  "Ironing Service",
-
-  "Kitchen Cleaning",
-
-  "Labour",
-  "Laptop Repair",
-  "Laundry Service",
-
-  "Makeup Artist",
-  "Mason",
-  "Mechanic",
-  "Mehndi Artist",
-  "Microwave Repair",
-  "Mobile Repair",
-  "Mobile Technician",
-
-  "Other Service",
-
-  "Packers & Movers",
-  "Painter",
-  "Pest Control",
-  "Photographer",
-  "Plumber",
-  "POP Worker",
-  "Printer Repair",
-  "Printer Technician",
-
-  "Refrigerator Repair",
-  "RO Installation",
-  "RO Repair",
-  "RO Technician",
-
-  "Salon at Home",
-  "Security Guard",
-  "Sofa Cleaning",
-  "Solar Technician",
-
-  "Tailor",
-  "Tile Worker",
-  "TV Repair",
-
-  "Washing Machine Repair",
-  "Water Purifier Repair",
-  "Water Tank Cleaning",
-  "Welder",
-  "Welder Fabricator",
-  "WiFi Technician",
-
-  "Yoga Trainer"
-
-];
-
-
-/* =========================================================
-   DOM
-========================================================= */
-
-const searchInput =
-  document.getElementById(
-    "service-search"
-  );
-
-const suggestionBox =
-  document.getElementById(
-    "service-suggestions"
-  );
-
-const clearButton =
-  document.getElementById(
-    "search-clear"
-  );
-
-const workerList =
-  document.getElementById(
-    "worker-list"
-  );
-
-const categories =
-  document.querySelectorAll(
-    ".category"
-  );
-
-const bottomSearch =
-  document.getElementById(
-    "bottom-search"
-  );
-
-
-/* =========================================================
-   SERVICE ICON
-========================================================= */
-
-function getServiceIcon(service){
-
-  const name =
-    String(service || "")
-      .toLowerCase();
-
-  if(
-    name.includes("electric")
-  ){
-    return "⚡";
-  }
-
-  if(
-    name.includes("plumb")
-  ){
-    return "🚰";
-  }
-
-  if(
-    name.includes("ac ")
-    ||
-    name.startsWith("ac")
-  ){
-    return "❄️";
-  }
-
-  if(
-    name.includes("carpent")
-  ){
-    return "🪚";
-  }
-
-  if(
-    name.includes("paint")
-  ){
-    return "🎨";
-  }
-
-  if(
-    name.includes("clean")
-  ){
-    return "🧹";
-  }
-
-  if(
-    name.includes("mobile")
-  ){
-    return "📱";
-  }
-
-  if(
-    name.includes("computer")
-    ||
-    name.includes("laptop")
-  ){
-    return "💻";
-  }
-
-  if(
-    name.includes("mechanic")
-    ||
-    name.includes("bike")
-    ||
-    name.includes("car ")
-    ||
-    name === "car"
-  ){
-    return "🔧";
-  }
-
-  if(
-    name.includes("cook")
-  ){
-    return "👨‍🍳";
-  }
-
-  if(
-    name.includes("driver")
-  ){
-    return "🚗";
-  }
-
-  if(
-    name.includes("cctv")
-  ){
-    return "📹";
-  }
-
-  if(
-    name.includes("tailor")
-  ){
-    return "🧵";
-  }
-
-  if(
-    name.includes("gard")
-  ){
-    return "🌱";
-  }
-
-  if(
-    name.includes("teacher")
-  ){
-    return "📚";
-  }
-
-  if(
-    name.includes("repair")
-  ){
-    return "🛠️";
-  }
-
-  if(
-    name.includes("solar")
-  ){
-    return "☀️";
-  }
-
-  if(
-    name.includes("yoga")
-  ){
-    return "🧘";
-  }
-
-  if(
-    name.includes("photographer")
-  ){
-    return "📷";
-  }
-
-  return "👤";
-}
-
-
-/* =========================================================
-   ESCAPE HTML
-========================================================= */
-
-function escapeHTML(value){
-
-  return String(
-    value ?? ""
-  )
-
-  .replace(
-    /&/g,
-    "&amp;"
-  )
-
-  .replace(
-    /</g,
-    "&lt;"
-  )
-
-  .replace(
-    />/g,
-    "&gt;"
-  )
-
-  .replace(
-    /"/g,
-    "&quot;"
-  )
-
-  .replace(
-    /'/g,
-    "&#039;"
-  );
-
-}
-
-
-/* =========================================================
-   WORKER PHOTO
-   FIXED:
-   DATABASE COLUMN = "photo url"
-========================================================= */
-
-function getWorkerPhoto(worker){
-
-  const photo =
-    String(
-      worker["photo url"] ||
-      worker.photo_url ||
-      ""
-    ).trim();
-
-  if(photo){
-
-    return `
-
-      <img
-        src="${escapeHTML(photo)}"
-        alt="${escapeHTML(worker.name)}"
-        loading="lazy"
-        onerror="
-          this.style.display='none';
-          this.nextElementSibling.style.display='flex';
-        "
-      >
-
-      <span
-        class="worker-fallback-icon"
-        style="display:none;"
-      >
-        ${getServiceIcon(worker.service)}
-      </span>
-
-    `;
-
-  }
-
-  return `
-
-    <span class="worker-fallback-icon">
-      ${getServiceIcon(worker.service)}
-    </span>
-
-  `;
-}
-
-
-/* =========================================================
-   SEARCH - SERVICE SUGGESTIONS
-========================================================= */
-
-function showServiceSuggestions(){
-
-  const raw =
-    searchInput.value.trim();
-
-  const query =
-    raw.toLowerCase();
-
-  suggestionBox.innerHTML = "";
-
-  if(!query){
-
-    suggestionBox.classList.remove(
-      "show"
-    );
-
-    clearButton.classList.remove(
-      "show"
-    );
-
-    return;
-  }
-
-  clearButton.classList.add(
-    "show"
-  );
-
-  const matches =
-    ALL_SERVICES.filter(
-      service =>
-        service
-          .toLowerCase()
-          .startsWith(query)
-    );
-
-  if(matches.length === 0){
-
-    suggestionBox.innerHTML = `
-
-      <div class="no-service">
-
-        No service found for
-        "<strong>${escapeHTML(raw)}</strong>"
-
-      </div>
-
-    `;
-
-    suggestionBox.classList.add(
-      "show"
-    );
-
-    return;
-  }
-
-  matches.forEach(
-    service => {
-
-      const item =
-        document.createElement(
-          "button"
-        );
-
-      item.type =
-        "button";
-
-      item.className =
-        "service-suggestion";
-
-      item.innerHTML = `
-
-        <div class="suggestion-icon">
-          ${getServiceIcon(service)}
-        </div>
-
-        <div class="suggestion-name">
-          ${escapeHTML(service)}
-        </div>
-
-        <div class="suggestion-letter">
-          ${service.charAt(0)}
-        </div>
-
-      `;
-
-      item.addEventListener(
-        "click",
-        () => {
-
-          searchInput.value =
-            service;
-
-          suggestionBox.classList.remove(
-            "show"
-          );
-
-          clearButton.classList.add(
-            "show"
-          );
-
-          loadWorkers(service);
-
-        }
-      );
-
-      suggestionBox.appendChild(
-        item
-      );
-
-    }
-  );
-
-  suggestionBox.classList.add(
-    "show"
-  );
-}
-
-
-/* =========================================================
-   LOAD WORKERS
-========================================================= */
-
-async function loadWorkers(
-  serviceFilter = ""
-){
-
-  workerList.innerHTML = `
-
-    <div class="loading-card">
-
-      <div class="loading-spinner"></div>
-
-      <div>
-
-        <strong>
-          Finding workers...
-        </strong>
-
-        <small>
-          Loading verified professionals
-        </small>
-
-      </div>
-
-    </div>
-
-  `;
-
-  try{
-
-    let query =
-      supabaseClient
-        .from("workers")
-        .select("*")
-        .eq(
-          "verification_status",
-          "approved"
-        );
-
-    if(serviceFilter){
-
-      query =
-        query.ilike(
-          "service",
-          `%${serviceFilter}%`
-        );
-
-    }
-
-    const {
-      data,
-      error
-    } = await query;
-
-    if(error){
-
-      console.error(
-        "Supabase worker error:",
-        error
-      );
-
-      showWorkerError();
-
-      return;
-    }
-
-    workerList.innerHTML = "";
-
-    if(
-      !data ||
-      data.length === 0
-    ){
-
-      showNoWorkers(
-        serviceFilter
-      );
-
-      return;
-    }
-
-    data.forEach(
-      worker => {
-
-        createWorkerCard(
-          worker
-        );
-
-      }
-    );
-
-  }
-  catch(error){
-
-    console.error(
-      "Worker loading failed:",
-      error
-    );
-
-    showWorkerError();
-
-  }
-}
-
-
-/* =========================================================
-   CREATE WORKER CARD
-========================================================= */
-
-function createWorkerCard(
-  worker
-){
-
-  const card =
-    document.createElement(
-      "div"
-    );
-
-  card.className =
-    "worker";
-
-  card.innerHTML = `
-
-    <div class="worker-img">
-
-      ${getWorkerPhoto(worker)}
-
-    </div>
-
-    <div class="worker-info">
-
-      <h3>
-        ${escapeHTML(
-          worker.service
-        )}
-      </h3>
-
-      <p>
-        ${escapeHTML(
-          worker.name
-        )}
-        •
-        ${escapeHTML(
-          worker.area
-        )}
-      </p>
-
-      <div class="rating">
-        ⭐ Verified Provider
-      </div>
-
-    </div>
-
-    <button
-      type="button"
-      class="view"
-    >
-      View
-    </button>
-
-  `;
-
-  workerList.appendChild(
-    card
-  );
-
-  const viewButton =
-    card.querySelector(
-      ".view"
-    );
-
-  viewButton.addEventListener(
-    "click",
-    () => {
-
-      showWorkerProfile(
-        worker
-      );
-
-    }
-  );
-}
-
-
-/* =========================================================
-   NO WORKERS
-========================================================= */
-
-function showNoWorkers(
-  service
-){
-
-  const serviceText =
-    service
-      ? escapeHTML(service)
-      : "this service";
-
-  workerList.innerHTML = `
-
-    <div class="no-workers">
-
-      <div class="empty-icon">
-        🔎
-      </div>
-
-      <h3>
-        No workers found
-      </h3>
-
-      <p>
-        No approved worker is available
-        for ${serviceText} yet.
-      </p>
-
-    </div>
-
-  `;
-}
-
-
-/* =========================================================
-   ERROR
-========================================================= */
-
-function showWorkerError(){
-
-  workerList.innerHTML = `
-
-    <div class="no-workers">
-
-      <div class="empty-icon">
-        ⚠️
-      </div>
-
-      <h3>
-        Unable to load workers
-      </h3>
-
-      <p>
-        Please refresh the page and try again.
-      </p>
-
-    </div>
-
-  `;
-}
-
-
-/* =========================================================
-   WORKER PROFILE
-========================================================= */
-
-function showWorkerProfile(
-  worker
-){
-
-  const old =
-    document.querySelector(
-      ".worker-profile"
-    );
-
-  if(old){
-    old.remove();
-  }
-
-  const profile =
-    document.createElement(
-      "div"
-    );
-
-  profile.className =
-    "worker-profile";
-
-  profile.innerHTML = `
-
-    <div class="profile-box">
-
-      <button
-        type="button"
-        class="close-profile"
-        aria-label="Close"
-      >
-        ×
-      </button>
-
-      <div class="profile-icon">
-
-        ${getWorkerPhoto(worker)}
-
-      </div>
-
-      <h2>
-        ${escapeHTML(
-          worker.name
-        )}
-      </h2>
-
-      <div class="verified">
-        ✓ Verified Provider
-      </div>
-
-      <div class="profile-details">
-
-        <p>
-
-          🔧
-
-          <strong>
-            Service:
-          </strong>
-
-          ${escapeHTML(
-            worker.service
-          )}
-
-        </p>
-
-        <p>
-
-          📍
-
-          <strong>
-            Area:
-          </strong>
-
-          ${escapeHTML(
-            worker.area
-          )}
-
-        </p>
-
-        <p>
-
-          🛠️
-
-          <strong>
-            Experience:
-          </strong>
-
-          ${escapeHTML(
-            worker.experience
-          )}
-
-        </p>
-
-        <p>
-
-          💰
-
-          <strong>
-            Starting charge:
-          </strong>
-
-          ₹${escapeHTML(
-            String(
-              worker["starting charge"] ??
-              worker.starting_charge ??
-              ""
-            )
-          )}
-
-        </p>
-
-        <p>
-
-          🕐
-
-          <strong>
-            Availability:
-          </strong>
-
-          ${escapeHTML(
-            worker.availability
-          )}
-
-        </p>
-
-        <p>
-
-          📝
-
-          <strong>
-            About:
-          </strong>
-
-          ${escapeHTML(
-            worker.description
-          )}
-
-        </p>
-
-      </div>
-
-      <div class="contact-buttons">
-
-        <a
-          class="call-button"
-          href="tel:${escapeHTML(
-            worker.mobile
-          )}"
-        >
-          📞 Call
-        </a>
-
-        <a
-          class="whatsapp-button"
+  "https://jprqqylhmwenshynrgtk.supabase.co"; 
+ 
+/* 
+  IMPORTANT: 
+  Yahan apni existing Publishable Key rakho. 
+  Apni key mujhe send mat karna. 
+*/ 
+ 
+const SUPABASE_KEY = 
+  "sb_publishable_QL9UvmHtxzM9fvZAG8TFnw_UvpOEY3i"; 
+ 
+const supabaseClient = 
+  supabase.createClient( 
+    SUPABASE_URL, 
+    SUPABASE_KEY 
+  ); 
+ 
+ 
+/* ========================================================= 
+   ALL SERVICES 
+========================================================= */ 
+ 
+const ALL_SERVICES = [ 
+ 
+  "AC Installation", 
+  "AC Repair", 
+  "AC Gas Filling", 
+  "AC Service", 
+  "AC Technician", 
+ 
+  "Aluminium Worker", 
+  "Appliance Repair", 
+  "Auto Mechanic", 
+ 
+  "Bathroom Cleaning", 
+  "Beautician", 
+  "Bike Mechanic", 
+  "Bike Wash", 
+ 
+  "Car Cleaning", 
+  "Car Mechanic", 
+  "Car Wash", 
+  "Carpenter", 
+  "CCTV Installation", 
+  "CCTV Repair", 
+  "Chimney Repair", 
+  "Cleaner", 
+  "Computer Repair", 
+  "Computer Technician", 
+  "Construction Worker", 
+  "Cook", 
+ 
+  "Dance Teacher", 
+  "DTH Technician", 
+ 
+  "Electrician", 
+  "Electrician Helper", 
+  "Event Decoration", 
+ 
+  "Fabrication Worker", 
+  "False Ceiling Worker", 
+  "Fitness Trainer", 
+  "Furniture Repair", 
+ 
+  "Gardener", 
+  "Gardening Service", 
+  "Glass Worker", 
+  "Geyser Repair", 
+ 
+  "Home Cleaning", 
+  "Home Tutor", 
+ 
+  "Interior Designer", 
+  "Internet Technician", 
+  "Inverter Repair", 
+  "Ironing Service", 
+ 
+  "Kitchen Cleaning", 
+ 
+  "Labour", 
+  "Laptop Repair", 
+  "Laundry Service", 
+ 
+  "Makeup Artist", 
+  "Mason", 
+  "Mechanic", 
+  "Mehndi Artist", 
+  "Microwave Repair", 
+  "Mobile Repair", 
+  "Mobile Technician", 
+ 
+  "Other Service", 
+ 
+  "Packers & Movers", 
+  "Painter", 
+  "Pest Control", 
+  "Photographer", 
+  "Plumber", 
+  "POP Worker", 
+  "Printer Repair", 
+  "Printer Technician", 
+ 
+  "Refrigerator Repair", 
+  "RO Installation", 
+  "RO Repair", 
+  "RO Technician", 
+ 
+  "Salon at Home", 
+  "Security Guard", 
+  "Sofa Cleaning", 
+  "Solar Technician", 
+ 
+  "Tailor", 
+  "Tile Worker", 
+  "TV Repair", 
+ 
+  "Washing Machine Repair", 
+  "Water Purifier Repair", 
+  "Water Tank Cleaning", 
+  "Welder", 
+  "Welder Fabricator", 
+  "WiFi Technician", 
+ 
+  "Yoga Trainer" 
+ 
+]; 
+ 
+ 
+/* ========================================================= 
+   DOM 
+========================================================= */ 
+ 
+const searchInput = 
+  document.getElementById( 
+    "service-search" 
+  ); 
+ 
+const suggestionBox = 
+  document.getElementById( 
+    "service-suggestions" 
+  ); 
+ 
+const clearButton = 
+  document.getElementById( 
+    "search-clear" 
+  ); 
+ 
+const workerList = 
+  document.getElementById( 
+    "worker-list" 
+  ); 
+ 
+const categories = 
+  document.querySelectorAll( 
+    ".category" 
+  ); 
+ 
+const bottomSearch = 
+  document.getElementById( 
+    "bottom-search" 
+  ); 
+ 
+ 
+/* ========================================================= 
+   SERVICE ICON 
+========================================================= */ 
+ 
+function getServiceIcon(service){ 
+ 
+  const name = 
+    String(service || "") 
+      .toLowerCase(); 
+ 
+  if( 
+    name.includes("electric") 
+  ){ 
+    return "⚡"; 
+  } 
+ 
+  if( 
+    name.includes("plumb") 
+  ){ 
+    return "🚰"; 
+  } 
+ 
+  if( 
+    name.includes("ac ") 
+    || 
+    name.startsWith("ac") 
+  ){ 
+    return "❄️"; 
+  } 
+ 
+  if( 
+    name.includes("carpent") 
+  ){ 
+    return "🪚"; 
+  } 
+ 
+  if( 
+    name.includes("paint") 
+  ){ 
+    return "🎨"; 
+  } 
+ 
+  if( 
+    name.includes("clean") 
+  ){ 
+    return "🧹"; 
+  } 
+ 
+  if( 
+    name.includes("mobile") 
+  ){ 
+    return "📱"; 
+  } 
+ 
+  if( 
+    name.includes("computer") 
+    || 
+    name.includes("laptop") 
+  ){ 
+    return "💻"; 
+  } 
+ 
+  if( 
+    name.includes("mechanic") 
+    || 
+    name.includes("bike") 
+    || 
+    name.includes("car ") 
+    || 
+    name === "car" 
+  ){ 
+    return "🔧"; 
+  } 
+ 
+  if( 
+    name.includes("cook") 
+  ){ 
+    return "👨‍🍳"; 
+  } 
+ 
+  if( 
+    name.includes("driver") 
+  ){ 
+    return "🚗"; 
+  } 
+ 
+  if( 
+    name.includes("cctv") 
+  ){ 
+    return "📹"; 
+  } 
+ 
+  if( 
+    name.includes("tailor") 
+  ){ 
+    return "🧵"; 
+  } 
+ 
+  if( 
+    name.includes("gard") 
+  ){ 
+    return "🌱"; 
+  } 
+ 
+  if( 
+    name.includes("teacher") 
+  ){ 
+    return "📚"; 
+  } 
+ 
+  if( 
+    name.includes("repair") 
+  ){ 
+    return "🛠️"; 
+  } 
+ 
+  if( 
+    name.includes("solar") 
+  ){ 
+    return "☀️"; 
+  } 
+ 
+  if( 
+    name.includes("yoga") 
+  ){ 
+    return "🧘"; 
+  } 
+ 
+  if( 
+    name.includes("photographer") 
+  ){ 
+    return "📷"; 
+  } 
+ 
+  return "👤"; 
+} 
+ 
+ 
+/* ========================================================= 
+   ESCAPE HTML 
+========================================================= */ 
+ 
+function escapeHTML(value){ 
+ 
+  return String( 
+    value ?? "" 
+  ) 
+ 
+  .replace( 
+    /&/g, 
+    "&amp;" 
+  ) 
+ 
+  .replace( 
+    /</g, 
+    "&lt;" 
+  ) 
+ 
+  .replace( 
+    />/g, 
+    "&gt;" 
+  ) 
+ 
+  .replace( 
+    /"/g, 
+    "&quot;" 
+  ) 
+ 
+  .replace( 
+    /'/g, 
+    "&#039;" 
+  ); 
+ 
+} 
+ 
+ 
+/* ========================================================= 
+   WORKER PHOTO 
+   DATABASE COLUMN = photo_url
+========================================================= */ 
+ 
+function getWorkerPhoto(worker){ 
+ 
+  const photo = 
+    String( 
+      worker.photo_url || 
+      worker["photo url"] || 
+      "" 
+    ).trim(); 
+ 
+  if(photo){ 
+ 
+    return ` 
+ 
+      <img 
+        src="${escapeHTML(photo)}" 
+        alt="${escapeHTML(worker.name)}" 
+        loading="lazy" 
+        onerror=" 
+          this.style.display='none'; 
+          this.nextElementSibling.style.display='flex'; 
+        " 
+      > 
+ 
+      <span 
+        class="worker-fallback-icon" 
+        style="display:none;" 
+      > 
+        ${getServiceIcon(worker.service)} 
+      </span> 
+ 
+    `; 
+ 
+  } 
+ 
+  return ` 
+ 
+    <span class="worker-fallback-icon"> 
+      ${getServiceIcon(worker.service)} 
+    </span> 
+ 
+  `; 
+} 
+ 
+ 
+/* ========================================================= 
+   SEARCH - SERVICE SUGGESTIONS 
+========================================================= */ 
+ 
+function showServiceSuggestions(){ 
+ 
+  const raw = 
+    searchInput.value.trim(); 
+ 
+  const query = 
+    raw.toLowerCase(); 
+ 
+  suggestionBox.innerHTML = ""; 
+ 
+  if(!query){ 
+ 
+    suggestionBox.classList.remove( 
+      "show" 
+    ); 
+ 
+    clearButton.classList.remove( 
+      "show" 
+    ); 
+ 
+    return; 
+  } 
+ 
+  clearButton.classList.add( 
+    "show" 
+  ); 
+ 
+  const matches = 
+    ALL_SERVICES.filter( 
+      service => 
+        service 
+          .toLowerCase() 
+          .startsWith(query) 
+    ); 
+ 
+  if(matches.length === 0){ 
+ 
+    suggestionBox.innerHTML = ` 
+ 
+      <div class="no-service"> 
+ 
+        No service found for 
+        "<strong>${escapeHTML(raw)}</strong>" 
+ 
+      </div> 
+ 
+    `; 
+ 
+    suggestionBox.classList.add( 
+      "show" 
+    ); 
+ 
+    return; 
+  } 
+ 
+  matches.forEach( 
+    service => { 
+ 
+      const item = 
+        document.createElement( 
+          "button" 
+        ); 
+ 
+      item.type = 
+        "button"; 
+ 
+      item.className = 
+        "service-suggestion"; 
+ 
+      item.innerHTML = ` 
+ 
+        <div class="suggestion-icon"> 
+          ${getServiceIcon(service)} 
+        </div> 
+ 
+        <div class="suggestion-name"> 
+          ${escapeHTML(service)} 
+        </div> 
+ 
+        <div class="suggestion-letter"> 
+          ${service.charAt(0)} 
+        </div> 
+ 
+      `; 
+ 
+      item.addEventListener( 
+        "click", 
+        () => { 
+ 
+          searchInput.value = 
+            service; 
+ 
+          suggestionBox.classList.remove( 
+            "show" 
+          ); 
+ 
+          clearButton.classList.add( 
+            "show" 
+          ); 
+ 
+          loadWorkers(service); 
+ 
+        } 
+      ); 
+ 
+      suggestionBox.appendChild( 
+        item 
+      ); 
+ 
+    } 
+  ); 
+ 
+  suggestionBox.classList.add( 
+    "show" 
+  ); 
+} 
+ 
+ 
+/* ========================================================= 
+   LOAD WORKERS 
+========================================================= */ 
+ 
+async function loadWorkers( 
+  serviceFilter = "" 
+){ 
+ 
+  workerList.innerHTML = ` 
+ 
+    <div class="loading-card"> 
+ 
+      <div class="loading-spinner"></div> 
+ 
+      <div> 
+ 
+        <strong> 
+          Finding workers... 
+        </strong> 
+ 
+        <small> 
+          Loading verified professionals 
+        </small> 
+ 
+      </div> 
+ 
+    </div> 
+ 
+  `; 
+ 
+  try{ 
+ 
+    let query = 
+      supabaseClient 
+        .from("workers") 
+        .select("*") 
+        .eq( 
+          "verification_status", 
+          "approved" 
+        ); 
+ 
+    if(serviceFilter){ 
+ 
+      query = 
+        query.ilike( 
+          "service", 
+          `%${serviceFilter}%` 
+        ); 
+ 
+    } 
+ 
+    const { 
+      data, 
+      error 
+    } = await query; 
+ 
+    if(error){ 
+ 
+      console.error( 
+        "Supabase worker error:", 
+        error 
+      ); 
+ 
+      showWorkerError(); 
+ 
+      return; 
+ 
+    } 
+ 
+    workerList.innerHTML = ""; 
+ 
+    if( 
+      !data || 
+      data.length === 0 
+    ){ 
+ 
+      showNoWorkers( 
+        serviceFilter 
+      ); 
+ 
+      return; 
+ 
+    } 
+ 
+    data.forEach( 
+      worker => { 
+ 
+        createWorkerCard( 
+          worker 
+        ); 
+ 
+      } 
+    ); 
+ 
+  } 
+  catch(error){ 
+ 
+    console.error( 
+      "Worker loading failed:", 
+      error 
+    ); 
+ 
+    showWorkerError(); 
+ 
+  } 
+} 
+ 
+ 
+/* ========================================================= 
+   CREATE WORKER CARD 
+========================================================= */ 
+ 
+function createWorkerCard( 
+  worker 
+){ 
+ 
+  const card = 
+    document.createElement( 
+      "div" 
+    ); 
+ 
+  card.className = 
+    "worker"; 
+ 
+  card.innerHTML = ` 
+ 
+    <div class="worker-img"> 
+ 
+      ${getWorkerPhoto(worker)} 
+ 
+    </div> 
+ 
+    <div class="worker-info"> 
+ 
+      <h3> 
+        ${escapeHTML( 
+          worker.service 
+        )} 
+      </h3> 
+ 
+      <p> 
+        ${escapeHTML( 
+          worker.name 
+        )} 
+        • 
+        ${escapeHTML( 
+          worker.area 
+        )} 
+      </p> 
+ 
+      <div class="rating"> 
+        ⭐ Verified Provider 
+      </div> 
+ 
+    </div> 
+ 
+    <button 
+      type="button" 
+      class="view" 
+    > 
+      View 
+    </button> 
+ 
+  `; 
+ 
+  workerList.appendChild( 
+    card 
+  ); 
+ 
+  const viewButton = 
+    card.querySelector( 
+      ".view" 
+    ); 
+ 
+  viewButton.addEventListener( 
+    "click", 
+    () => { 
+ 
+      showWorkerProfile( 
+        worker 
+      ); 
+ 
+    } 
+  ); 
+} 
+ 
+ 
+/* ========================================================= 
+   NO WORKERS 
+========================================================= */ 
+ 
+function showNoWorkers( 
+  service 
+){ 
+ 
+  const serviceText = 
+    service 
+      ? escapeHTML(service) 
+      : "this service"; 
+ 
+  workerList.innerHTML = ` 
+ 
+    <div class="no-workers"> 
+ 
+      <div class="empty-icon"> 
+        🔎 
+      </div> 
+ 
+      <h3> 
+        No workers found 
+      </h3> 
+ 
+      <p> 
+        No approved worker is available 
+        for ${serviceText} yet. 
+      </p> 
+ 
+    </div> 
+ 
+  `; 
+} 
+ 
+ 
+/* ========================================================= 
+   ERROR 
+========================================================= */ 
+ 
+function showWorkerError(){ 
+ 
+  workerList.innerHTML = ` 
+ 
+    <div class="no-workers"> 
+ 
+      <div class="empty-icon"> 
+        ⚠️ 
+      </div> 
+ 
+      <h3> 
+        Unable to load workers 
+      </h3> 
+ 
+      <p> 
+        Please refresh the page and try again. 
+      </p> 
+ 
+    </div> 
+ 
+  `; 
+ 
+} 
+ 
+ 
+/* ========================================================= 
+   WORKER PROFILE 
+========================================================= */ 
+ 
+function showWorkerProfile( 
+  worker 
+){ 
+ 
+  const old = 
+    document.querySelector( 
+      ".worker-profile" 
+    ); 
+ 
+  if(old){ 
+    old.remove(); 
+  } 
+ 
+  const profile = 
+    document.createElement( 
+      "div" 
+    ); 
+ 
+  profile.className = 
+    "worker-profile"; 
+ 
+  profile.innerHTML = ` 
+ 
+    <div class="profile-box"> 
+ 
+      <button 
+        type="button" 
+        class="close-profile" 
+        aria-label="Close" 
+      > 
+        × 
+      </button> 
+ 
+      <div class="profile-icon"> 
+ 
+        ${getWorkerPhoto(worker)} 
+ 
+      </div> 
+ 
+      <h2> 
+        ${escapeHTML( 
+          worker.name 
+        )} 
+      </h2> 
+ 
+      <div class="verified"> 
+        ✓ Verified Provider 
+      </div> 
+ 
+      <div class="profile-details"> 
+ 
+        <p> 
+ 
+          🔧 
+ 
+          <strong> 
+            Service: 
+          </strong> 
+ 
+          ${escapeHTML( 
+            worker.service 
+          )} 
+ 
+        </p> 
+ 
+        <p> 
+ 
+          📍 
+ 
+          <strong> 
+            Area: 
+          </strong> 
+ 
+          ${escapeHTML( 
+            worker.area 
+          )} 
+ 
+        </p> 
+ 
+        <p> 
+ 
+          🛠️ 
+ 
+          <strong> 
+            Experience: 
+          </strong> 
+ 
+          ${escapeHTML( 
+            worker.experience 
+          )} 
+ 
+        </p> 
+ 
+        <p> 
+ 
+          💰 
+ 
+          <strong> 
+            Starting charge: 
+          </strong> 
+ 
+          ₹${escapeHTML( 
+            String( 
+              worker["starting charge"] ?? 
+              worker.starting_charge ?? 
+              "" 
+            ) 
+          )} 
+ 
+        </p> 
+ 
+        <p> 
+ 
+          🕐 
+ 
+          <strong> 
+            Availability: 
+          </strong> 
+ 
+          ${escapeHTML( 
+            worker.availability 
+          )} 
+ 
+        </p> 
+ 
+        <p> 
+ 
+          📝 
+ 
+          <strong> 
+            About: 
+          </strong> 
+ 
+          ${escapeHTML( 
+            worker.description 
+          )} 
+ 
+        </p> 
+ 
+      </div> 
+ 
+      <div class="contact-buttons"> 
+ 
+        <a 
+          class="call-button" 
+          href="tel:${escapeHTML( 
+            worker.mobile 
+          )}" 
+        > 
+          📞 Call 
+        </a> 
+ 
+        <a 
+          class="whatsapp-button" 
           href="https://wa.me/91${escapeHTML(
             worker.mobile
           )}"
@@ -1445,6 +1447,463 @@ document.addEventListener(
 
 
 /* =========================================================
+   WORKER PROFILE PHOTO
+   PHOTO IS ADDED AFTER REGISTRATION
+========================================================= */
+
+function openWorkerPhotoUpload(
+  modal,
+  worker
+){
+
+  const registerBox =
+    modal.querySelector(
+      ".fw-worker-register-box"
+    );
+
+  if(!registerBox){
+    return;
+  }
+
+  registerBox.innerHTML = `
+
+    <button
+      type="button"
+      class="fw-worker-register-close"
+    >
+      ×
+    </button>
+
+    <div class="fw-register-header">
+
+      <div class="fw-register-icon">
+        ✅
+      </div>
+
+      <h2>
+        Profile Created Successfully
+      </h2>
+
+      <p>
+        Ab apni profile photo add karein.
+      </p>
+
+    </div>
+
+    <div class="fw-photo-upload-step">
+
+      <div class="fw-photo-preview" id="fw-photo-preview">
+        ${getServiceIcon(worker.service)}
+      </div>
+
+      <label>
+        Profile Photo
+      </label>
+
+      <input
+        type="file"
+        id="fw-worker-profile-photo"
+        accept=".jpg,.jpeg,.png,.webp"
+      >
+
+      <small>
+        JPG, PNG ya WEBP. Maximum 5 MB.
+      </small>
+
+      <div
+        id="fw-photo-upload-message"
+        class="fw-register-message"
+      ></div>
+
+      <button
+        type="button"
+        id="fw-upload-profile-photo"
+        class="fw-register-submit"
+      >
+        Upload Profile Photo
+      </button>
+
+      <button
+        type="button"
+        id="fw-skip-profile-photo"
+        class="fw-skip-photo-btn"
+      >
+        Skip for Now
+      </button>
+
+    </div>
+
+  `;
+
+  const closeButton =
+    registerBox.querySelector(
+      ".fw-worker-register-close"
+    );
+
+  const photoInput =
+    registerBox.querySelector(
+      "#fw-worker-profile-photo"
+    );
+
+  const preview =
+    registerBox.querySelector(
+      "#fw-photo-preview"
+    );
+
+  const uploadButton =
+    registerBox.querySelector(
+      "#fw-upload-profile-photo"
+    );
+
+  const skipButton =
+    registerBox.querySelector(
+      "#fw-skip-profile-photo"
+    );
+
+  const message =
+    registerBox.querySelector(
+      "#fw-photo-upload-message"
+    );
+
+  closeButton.addEventListener(
+    "click",
+    () => modal.remove()
+  );
+
+  photoInput.addEventListener(
+    "change",
+    () => {
+
+      const file =
+        photoInput.files[0];
+
+      if(!file){
+        return;
+      }
+
+      const allowedTypes = [
+        "image/jpeg",
+        "image/png",
+        "image/webp"
+      ];
+
+      if(
+        !allowedTypes.includes(
+          file.type
+        )
+      ){
+
+        message.textContent =
+          "Photo sirf JPG, PNG ya WEBP honi chahiye.";
+
+        photoInput.value = "";
+
+        return;
+      }
+
+      if(
+        file.size >
+        5 * 1024 * 1024
+      ){
+
+        message.textContent =
+          "Profile photo maximum 5 MB ki ho sakti hai.";
+
+        photoInput.value = "";
+
+        return;
+      }
+
+      const reader =
+        new FileReader();
+
+      reader.onload =
+        event => {
+
+          preview.innerHTML = `
+
+            <img
+              src="${event.target.result}"
+              alt="Profile preview"
+            >
+
+          `;
+
+        };
+
+      reader.readAsDataURL(
+        file
+      );
+
+      message.textContent = "";
+
+    }
+  );
+
+  skipButton.addEventListener(
+    "click",
+    () => {
+
+      modal.remove();
+
+    }
+  );
+
+  uploadButton.addEventListener(
+    "click",
+    async () => {
+
+      const file =
+        photoInput.files[0];
+
+      if(!file){
+
+        message.textContent =
+          "Pehle profile photo select karein.";
+
+        return;
+
+      }
+
+      const allowedTypes = [
+        "image/jpeg",
+        "image/png",
+        "image/webp"
+      ];
+
+      if(
+        !allowedTypes.includes(
+          file.type
+        )
+      ){
+
+        message.textContent =
+          "Photo sirf JPG, PNG ya WEBP honi chahiye.";
+
+        return;
+
+      }
+
+      if(
+        file.size >
+        5 * 1024 * 1024
+      ){
+
+        message.textContent =
+          "Profile photo maximum 5 MB ki ho sakti hai.";
+
+        return;
+
+      }
+
+      uploadButton.disabled =
+        true;
+
+      skipButton.disabled =
+        true;
+
+      uploadButton.textContent =
+        "Uploading...";
+
+      message.textContent = "";
+
+      try{
+
+        const safeName =
+          file.name
+            .replace(
+              /[^a-zA-Z0-9._-]/g,
+              "_"
+            );
+
+        const uniqueName =
+          `${worker.id}-${Date.now()}-${Math.random()
+            .toString(36)
+            .substring(2,10)}-${safeName}`;
+
+        const storagePath =
+          `worker-profile/${uniqueName}`;
+
+        const {
+          error:
+            uploadError
+        } =
+          await supabaseClient
+            .storage
+            .from(
+              "worker-photos"
+            )
+            .upload(
+              storagePath,
+              file,
+              {
+                cacheControl:
+                  "3600",
+                upsert:
+                  false,
+                contentType:
+                  file.type
+              }
+            );
+
+        if(uploadError){
+
+          console.error(
+            "Worker profile photo upload error:",
+            uploadError
+          );
+
+          message.textContent =
+            "Profile photo upload nahi ho paayi. Please try again.";
+
+          uploadButton.disabled =
+            false;
+
+          skipButton.disabled =
+            false;
+
+          uploadButton.textContent =
+            "Upload Profile Photo";
+
+          return;
+
+        }
+
+        const {
+          data:
+            publicData
+        } =
+          supabaseClient
+            .storage
+            .from(
+              "worker-photos"
+            )
+            .getPublicUrl(
+              storagePath
+            );
+
+        const publicPhotoURL =
+          publicData &&
+          publicData.publicUrl
+            ? publicData.publicUrl
+            : "";
+
+        if(!publicPhotoURL){
+
+          message.textContent =
+            "Photo URL create nahi ho paaya.";
+
+          uploadButton.disabled =
+            false;
+
+          skipButton.disabled =
+            false;
+
+          uploadButton.textContent =
+            "Upload Profile Photo";
+
+          return;
+
+        }
+
+        const {
+          error:
+            updateError
+        } =
+          await supabaseClient
+            .from("workers")
+            .update({
+              photo_url:
+                publicPhotoURL
+            })
+            .eq(
+              "id",
+              worker.id
+            )
+            .eq(
+              "verification_status",
+              "pending"
+            )
+            .is(
+              "photo_url",
+              null
+            );
+
+        if(updateError){
+
+          console.error(
+            "Worker photo database update error:",
+            updateError
+          );
+
+          message.textContent =
+            "Photo upload ho gayi, lekin profile me save nahi ho paayi.";
+
+          uploadButton.disabled =
+            false;
+
+          skipButton.disabled =
+            false;
+
+          uploadButton.textContent =
+            "Upload Profile Photo";
+
+          return;
+
+        }
+
+        message.className =
+          "fw-register-message success";
+
+        message.innerHTML = `
+
+          <strong>
+            Profile photo added successfully!
+          </strong>
+
+          <br>
+
+          Aapki profile verification ke liye pending hai.
+
+        `;
+
+        uploadButton.textContent =
+          "Photo Added";
+
+        setTimeout(
+          () => modal.remove(),
+          1800
+        );
+
+      }
+      catch(error){
+
+        console.error(
+          "Worker profile photo failed:",
+          error
+        );
+
+        message.textContent =
+          "Something went wrong. Please try again.";
+
+        uploadButton.disabled =
+          false;
+
+        skipButton.disabled =
+          false;
+
+        uploadButton.textContent =
+          "Upload Profile Photo";
+
+      }
+
+    }
+  );
+
+}
+
+
+/* =========================================================
    WORKER REGISTRATION
    ADDED WITHOUT CHANGING EXISTING CUSTOMER APP
 ========================================================= */
@@ -1653,16 +2112,6 @@ function openWorkerRegistration(){
             rows="4"
             placeholder="Apne experience aur service ke baare mein likhein..."
           ></textarea>
-
-          <label>
-            Photo URL
-          </label>
-
-          <input
-            type="url"
-            id="fw-worker-photo-url"
-            placeholder="https://..."
-          >
 
           <div
             id="fw-register-message"
@@ -1875,15 +2324,6 @@ function openWorkerRegistration(){
           .trim();
 
 
-      const photoURL =
-        modal
-          .querySelector(
-            "#fw-worker-photo-url"
-          )
-          .value
-          .trim();
-
-
       const proofFile =
         proofInput.files[0];
 
@@ -2077,11 +2517,8 @@ function openWorkerRegistration(){
           Initially PENDING
 
           IMPORTANT:
-          Exact database column:
-          "starting charge"
-
-          Exact database column:
-          "photo url"
+          Photo is NOT collected during registration.
+          Profile photo will be added after registration.
         */
 
         const workerData = {
@@ -2112,9 +2549,6 @@ function openWorkerRegistration(){
 
           verification_status:
             "pending",
-
-          "photo url":
-            photoURL || null,
 
           experience_proof:
             experienceProofPath
@@ -2162,27 +2596,6 @@ function openWorkerRegistration(){
         );
 
 
-        message.className =
-          "fw-register-message success";
-
-
-        message.innerHTML = `
-
-          <strong>
-            Registration submitted successfully!
-          </strong>
-
-          <br>
-
-          Your profile is now pending verification.
-          Approval ke baad hi worker customer side par dikhega.
-
-        `;
-
-
-        submitButton.textContent =
-          "Submitted";
-
         form.reset();
 
         proofSection.classList.remove(
@@ -2190,13 +2603,9 @@ function openWorkerRegistration(){
         );
 
 
-        setTimeout(
-          () => {
-
-            modal.remove();
-
-          },
-          3000
+        openWorkerPhotoUpload(
+          modal,
+          data
         );
 
 
@@ -2780,6 +3189,100 @@ function setupWorkerRegistration(){
       background:#eef9f1;
       border-radius:11px;
       padding:11px;
+
+    }
+
+
+    /* ================================================
+       PROFILE PHOTO AFTER REGISTRATION
+    ================================================ */
+
+    .fw-photo-upload-step{
+
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+
+    }
+
+
+    .fw-photo-preview{
+
+      width:110px;
+      height:110px;
+      margin:0 auto 12px;
+      border-radius:50%;
+      background:#eef5ff;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      overflow:hidden;
+      font-size:45px;
+      color:#1769e0;
+      border:3px solid #e6edf8;
+    }
+
+
+    .fw-photo-preview img{
+
+      width:100%;
+      height:100%;
+      object-fit:cover;
+      display:block;
+
+    }
+
+
+    .fw-photo-upload-step label{
+
+      font-size:14px;
+      font-weight:700;
+      color:#263238;
+
+    }
+
+
+    .fw-photo-upload-step input[type="file"]{
+
+      width:100%;
+      box-sizing:border-box;
+      border:1px solid #d6dce4;
+      border-radius:11px;
+      background:#fff;
+      padding:10px;
+      font-size:14px;
+
+    }
+
+
+    .fw-photo-upload-step small{
+
+      color:#6b7280;
+      font-size:12px;
+      line-height:1.4;
+
+    }
+
+
+    .fw-skip-photo-btn{
+
+      width:100%;
+      border:1px solid #d6dce4;
+      border-radius:13px;
+      padding:13px;
+      background:#fff;
+      color:#4b5563;
+      font-size:14px;
+      font-weight:700;
+      cursor:pointer;
+      margin-top:4px;
+
+    }
+
+
+    .fw-skip-photo-btn:hover{
+
+      background:#f7f9fc;
 
     }
 
