@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -13,173 +14,202 @@
 
   <div class="app">
 
-    <div class="header">
+    <!-- HEADER -->
+    <header class="header">
 
-      <div class="logo">FindWorker</div>
+      <div class="header-top">
 
-      <div class="tagline">
-        Find trusted workers near you
+        <div>
+          <div class="logo">
+            Find<span>Worker</span>
+          </div>
+
+          <div class="tagline">
+            Find trusted workers near you
+          </div>
+        </div>
+
+        <div class="header-badge">
+          <span class="live-dot"></span>
+          Local Services
+        </div>
+
       </div>
 
+
+      <!-- SEARCH -->
       <div class="search">
-        🔍
+
+        <span class="search-icon">⌕</span>
+
         <input
           type="text"
           placeholder="What service do you need?"
+          autocomplete="off"
         >
-      </div>
 
-    </div>
-
-
-    <div class="content">
-
-      <div class="title">
-        What do you need?
-      </div>
-
-      <div class="categories">
-
-        <div class="category">
-          <div class="icon">🔧</div>
-          <span>Electrician</span>
-        </div>
-
-        <div class="category">
-          <div class="icon">🚰</div>
-          <span>Plumber</span>
-        </div>
-
-        <div class="category">
-          <div class="icon">❄️</div>
-          <span>AC Repair</span>
-        </div>
-
-        <div class="category">
-          <div class="icon">🪚</div>
-          <span>Carpenter</span>
-        </div>
-
-        <div class="category">
-          <div class="icon">🎨</div>
-          <span>Painter</span>
-        </div>
-
-        <div class="category">
-          <div class="icon">🧹</div>
-          <span>Cleaner</span>
-        </div>
-
-        <div class="category">
-          <div class="icon">📱</div>
-          <span>Mobile Repair</span>
-        </div>
-
-        <div class="category">
-          <div class="icon">💻</div>
-          <span>Computer</span>
-        </div>
-
-        <div class="category">
-          <div class="icon">🚗</div>
-          <span>Mechanic</span>
-        </div>
+        <span class="search-shortcut">
+          Search
+        </span>
 
       </div>
 
+    </header>
 
-      <div class="nearby">
 
-        <div class="title">
-          Nearby Workers
-        </div>
+    <!-- CONTENT -->
+    <main class="content">
 
-        <div class="worker">
+      <!-- CATEGORIES -->
+      <section>
 
-          <div class="worker-img">
-            🔧
+        <div class="section-heading">
+
+          <div>
+            <div class="eyebrow">
+              EXPLORE SERVICES
+            </div>
+
+            <div class="title">
+              What do you need?
+            </div>
           </div>
 
-          <div class="worker-info">
+          <div class="service-count">
+            9 services
+          </div>
 
-            <h3>Electrician</h3>
+        </div>
 
-            <p>
-              Available service provider
-            </p>
 
-            <div class="rating">
-              ⭐ New Provider
+        <div class="categories">
+
+          <div class="category" data-service="Electrician">
+            <div class="icon">🔧</div>
+            <span>Electrician</span>
+          </div>
+
+          <div class="category" data-service="Plumber">
+            <div class="icon">🚰</div>
+            <span>Plumber</span>
+          </div>
+
+          <div class="category" data-service="AC Repair">
+            <div class="icon">❄️</div>
+            <span>AC Repair</span>
+          </div>
+
+          <div class="category" data-service="Carpenter">
+            <div class="icon">🪚</div>
+            <span>Carpenter</span>
+          </div>
+
+          <div class="category" data-service="Painter">
+            <div class="icon">🎨</div>
+            <span>Painter</span>
+          </div>
+
+          <div class="category" data-service="Cleaner">
+            <div class="icon">🧹</div>
+            <span>Cleaner</span>
+          </div>
+
+          <div class="category" data-service="Mobile Repair">
+            <div class="icon">📱</div>
+            <span>Mobile Repair</span>
+          </div>
+
+          <div class="category" data-service="Computer">
+            <div class="icon">💻</div>
+            <span>Computer</span>
+          </div>
+
+          <div class="category" data-service="Mechanic">
+            <div class="icon">🚗</div>
+            <span>Mechanic</span>
+          </div>
+
+        </div>
+
+      </section>
+
+
+      <!-- WORKERS -->
+      <section class="nearby">
+
+        <div class="section-heading worker-heading">
+
+          <div>
+            <div class="eyebrow">
+              VERIFIED PROFESSIONALS
+            </div>
+
+            <div class="title">
+              Nearby Workers
+            </div>
+          </div>
+
+          <div class="verified-mini">
+            ✓ Verified
+          </div>
+
+        </div>
+
+
+        <div id="worker-list">
+
+          <div class="loading-card">
+
+            <div class="loading-spinner"></div>
+
+            <div>
+              <strong>Finding workers...</strong>
+              <small>Loading verified professionals</small>
             </div>
 
           </div>
 
-          <button class="view">
-            View
-          </button>
-
         </div>
 
+      </section>
 
-        <div class="worker">
-
-          <div class="worker-img">
-            🚰
-          </div>
-
-          <div class="worker-info">
-
-            <h3>Plumber</h3>
-
-            <p>
-              Nearby service provider
-            </p>
-
-            <div class="rating">
-              ⭐ New Provider
-            </div>
-
-          </div>
-
-          <button class="view">
-            View
-          </button>
-
-        </div>
-
-      </div>
-
-    </div>
+    </main>
 
 
-    <div class="nav">
+    <!-- BOTTOM NAV -->
+    <nav class="nav">
 
       <div class="nav-item active">
-        <div class="nav-icon">🏠</div>
-        Home
+        <div class="nav-icon">⌂</div>
+        <span>Home</span>
       </div>
 
       <div class="nav-item">
-        <div class="nav-icon">🔎</div>
-        Search
+        <div class="nav-icon">⌕</div>
+        <span>Search</span>
       </div>
 
       <div class="nav-item">
-        <div class="nav-icon">📋</div>
-        Requests
+        <div class="nav-icon">▣</div>
+        <span>Requests</span>
       </div>
 
       <div class="nav-item">
-        <div class="nav-icon">👤</div>
-        Profile
+        <div class="nav-icon">◉</div>
+        <span>Profile</span>
       </div>
 
-    </div>
+    </nav>
 
   </div>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <!-- SUPABASE -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <!-- APP -->
   <script src="app.js"></script>
 
 </body>
+
 </html>
