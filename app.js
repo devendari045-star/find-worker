@@ -1,92 +1,67 @@
-/* =====================================================
-   FINDWORKER
-   Premium Frontend + Supabase
-===================================================== */
-
-
-/* =========================
-   SUPABASE
-========================= */
-
-const SUPABASE_URL =
-  "https://jprqqylhmwenshynrgtk.supabase.co";
-
-const SUPABASE_KEY =
-  "sb_publishable_QL9UvmHtxzM9fvZAG8TFnw_UvpOEY3i";
-
+const SUPABASE_URL = "https://jprqqylhmwenshynrgtk.supabase.co";
+const SUPABASE_KEY = "sb_publishable_QL9UvmHtxzM9fvZAG8TFnw_UvpOEY3i";
 
 const supabaseClient = supabase.createClient(
   SUPABASE_URL,
   SUPABASE_KEY
 );
 
-
-/* =========================
-   ELEMENTS
-========================= */
-
-const searchInput =
-  document.querySelector(".search input");
-
-const categories =
-  document.querySelectorAll(".category");
-
-const workerList =
-  document.querySelector("#worker-list");
+const searchInput = document.querySelector(".search input");
+const categories = document.querySelectorAll(".category");
+const nearbySection = document.querySelector(".nearby");
 
 
 /* =========================
-   SERVICE ICONS
+   SERVICE ICON FALLBACK
 ========================= */
 
 function getServiceIcon(service) {
 
-  const name =
-    String(service || "").toLowerCase();
+  const name = String(service || "").toLowerCase();
 
-  if (name.includes("electric"))
-    return "🔧";
+  if (name.includes("electric")) return "⚡";
+  if (name.includes("plumb")) return "🔧";
+  if (name.includes("ac") || name.includes("air")) return "❄️";
+  if (name.includes("carpent")) return "🪚";
+  if (name.includes("paint")) return "🎨";
+  if (name.includes("clean")) return "🧹";
+  if (name.includes("mechanic")) return "🔩";
+  if (name.includes("mobile")) return "📱";
+  if (name.includes("computer")) return "💻";
+  if (name.includes("repair")) return "🛠️";
 
-  if (name.includes("plumb"))
-    return "🚰";
-
-  if (name.includes("ac"))
-    return "❄️";
-
-  if (name.includes("carpent"))
-    return "🪚";
-
-  if (name.includes("paint"))
-    return "🎨";
-
-  if (name.includes("clean"))
-    return "🧹";
-
-  if (name.includes("mobile"))
-    return "📱";
-
-  if (name.includes("computer"))
-    return "💻";
-
-  if (name.includes("mechanic"))
-    return "🚗";
-
-  return "🛠️";
+  return "👤";
 }
 
 
 /* =========================
-   ESCAPE HTML
+   WORKER PHOTO
 ========================= */
 
-function escapeHTML(value) {
+function getWorkerPhoto(worker) {
 
-  return String(value ?? "")
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#039;");
+  if (worker.photo_url && worker.photo_url.trim() !== "") {
+
+    return `
+      <img
+        src="${escapeHTML(worker.photo_url)}"
+        alt="${escapeHTML(worker.name)}"
+        loading="lazy"
+        onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
+      >
+
+      <span class="worker-fallback-icon" style="display:none;">
+        ${getServiceIcon(worker.service)}
+      </span>
+    `;
+
+  }
+
+  return `
+    <span class="worker-fallback-icon">
+      ${getServiceIcon(worker.service)}
+    </span>
+  `;
 }
 
 
@@ -96,82 +71,37 @@ function escapeHTML(value) {
 
 async function loadWorkers() {
 
-  workerList.innerHTML = `
-    <div class="loading-card">
-
-      <div class="loading-spinner"></div>
-
-      <div>
-        <strong>Finding workers...</strong>
-        <small>Loading verified professionals</small>
-      </div>
-
-    </div>
-  `;
-
-
-  const {
-    data,
-    error
-  } = await supabaseClient
+  const { data, error } = await supabaseClient
     .from("workers")
     .select("*")
     .eq("verification_status", "approved");
 
-
   if (error) {
 
-    console.error(
-      "Worker loading error:",
-      error
-    );
-
-    workerList.innerHTML = `
-      <div class="empty-card">
-        Unable to load workers right now.
-      </div>
-    `;
+    console.error("Worker loading error:", error);
 
     return;
   }
 
 
-  if (!data || data.length === 0) {
-
-    workerList.innerHTML = `
-      <div class="empty-card">
-        No verified workers found yet.
-      </div>
-    `;
-
-    return;
-  }
+  nearbySection.querySelectorAll(".worker").forEach(worker => {
+    worker.remove();
+  });
 
 
-  workerList.innerHTML = "";
+  data.forEach(worker => {
 
-
-  data.forEach((worker, index) => {
-
-    const workerCard =
-      document.createElement("div");
-
+    const workerCard = document.createElement("div");
 
     workerCard.className = "worker";
-
-
-    workerCard.style.animationDelay =
-      `${index * 0.08}s`;
-
-
-    const serviceIcon =
-      getServiceIcon(worker.service);
 
 
     workerCard.innerHTML = `
 
       <div class="worker-img">
-        ${serviceIcon}
+
+        ${getWorkerPhoto(worker)}
+
       </div>
 
 
@@ -188,33 +118,29 @@ async function loadWorkers() {
         </p>
 
         <div class="rating">
-          ✓ Verified Provider
+          ⭐ Verified Provider
         </div>
 
       </div>
 
 
-      <button
-        class="view"
-        type="button"
-      >
+      <button class="view">
         View
       </button>
 
     `;
 
 
-    workerList.appendChild(workerCard);
+    nearbySection.appendChild(workerCard);
 
 
-    const viewButton =
-      workerCard.querySelector(".view");
+    workerCard
+      .querySelector(".view")
+      .addEventListener("click", function() {
 
+        showWorkerProfile(worker);
 
-    viewButton.addEventListener(
-      "click",
-      () => showWorkerProfile(worker)
-    );
+      });
 
   });
 
@@ -227,17 +153,13 @@ async function loadWorkers() {
 
 function showWorkerProfile(worker) {
 
-  const existing =
+  const oldProfile =
     document.querySelector(".worker-profile");
 
 
-  if (existing) {
-    existing.remove();
+  if (oldProfile) {
+    oldProfile.remove();
   }
-
-
-  const serviceIcon =
-    getServiceIcon(worker.service);
 
 
   const profile =
@@ -253,182 +175,75 @@ function showWorkerProfile(worker) {
     <div class="profile-box">
 
 
-      <!-- HERO -->
-
-      <div class="profile-hero">
-
-        <button
-          class="close-profile"
-          type="button"
-          aria-label="Close"
-        >
-          ×
-        </button>
+      <button class="close-profile">
+        ✕
+      </button>
 
 
-        <div class="profile-avatar">
-          ${serviceIcon}
-        </div>
+      <div class="profile-icon">
 
-
-        <h2>
-          ${escapeHTML(worker.name)}
-        </h2>
-
-
-        <div class="profile-service">
-          ${escapeHTML(worker.service)}
-        </div>
-
-
-        <div class="verified">
-          ✓ Verified Provider
-        </div>
+        ${getWorkerPhoto(worker)}
 
       </div>
 
 
-      <!-- STATS -->
-
-      <div class="profile-stats">
-
-
-        <div class="stat-box">
-
-          <div class="stat-value">
-            ${escapeHTML(worker.experience || "—")}
-          </div>
-
-          <div class="stat-label">
-            Experience
-          </div>
-
-        </div>
+      <h2>
+        ${escapeHTML(worker.name)}
+      </h2>
 
 
-        <div class="stat-box">
-
-          <div class="stat-value">
-            ₹${escapeHTML(
-              String(worker.starting_charge ?? "—")
-            )}
-          </div>
-
-          <div class="stat-label">
-            Starting
-          </div>
-
-        </div>
-
-
-        <div class="stat-box">
-
-          <div class="stat-value">
-            ${escapeHTML(
-              worker.availability || "—"
-            )}
-          </div>
-
-          <div class="stat-label">
-            Status
-          </div>
-
-        </div>
-
-
+      <div class="verified">
+        ✓ Verified Provider
       </div>
 
-
-      <!-- DETAILS -->
 
       <div class="profile-details">
 
 
-        <div class="profile-detail">
-
-          <div class="detail-icon">
-            📍
-          </div>
-
-          <div class="detail-content">
-
-            <span class="detail-label">
-              Service Area
-            </span>
-
-            <span class="detail-value">
-              ${escapeHTML(worker.area)}
-            </span>
-
-          </div>
-
-        </div>
+        <p>
+          🔧
+          <strong>Service:</strong>
+          ${escapeHTML(worker.service)}
+        </p>
 
 
-        <div class="profile-detail">
-
-          <div class="detail-icon">
-            🛠️
-          </div>
-
-          <div class="detail-content">
-
-            <span class="detail-label">
-              Service
-            </span>
-
-            <span class="detail-value">
-              ${escapeHTML(worker.service)}
-            </span>
-
-          </div>
-
-        </div>
+        <p>
+          📍
+          <strong>Area:</strong>
+          ${escapeHTML(worker.area)}
+        </p>
 
 
-        <div class="profile-detail">
+        <p>
+          🛠️
+          <strong>Experience:</strong>
+          ${escapeHTML(worker.experience)}
+        </p>
 
-          <div class="detail-icon">
-            🕐
-          </div>
 
-          <div class="detail-content">
+        <p>
+          💰
+          <strong>Starting charge:</strong>
+          ₹${escapeHTML(String(worker.starting_charge))}
+        </p>
 
-            <span class="detail-label">
-              Availability
-            </span>
 
-            <span class="detail-value">
-              ${escapeHTML(worker.availability)}
-            </span>
+        <p>
+          🕐
+          <strong>Availability:</strong>
+          ${escapeHTML(worker.availability)}
+        </p>
 
-          </div>
 
-        </div>
+        <p>
+          📝
+          <strong>About:</strong>
+          ${escapeHTML(worker.description)}
+        </p>
 
 
       </div>
 
-
-      <!-- ABOUT -->
-
-      <div class="about-box">
-
-        <div class="about-title">
-          About Professional
-        </div>
-
-        <div class="about-text">
-          ${escapeHTML(
-            worker.description ||
-            "Professional service provider."
-          )}
-        </div>
-
-      </div>
-
-
-      <!-- CONTACT -->
 
       <div class="contact-buttons">
 
@@ -462,76 +277,13 @@ function showWorkerProfile(worker) {
   document.body.appendChild(profile);
 
 
-  /* CLOSE BUTTON */
-
   profile
     .querySelector(".close-profile")
-    .addEventListener(
-      "click",
-      () => closeProfile(profile)
-    );
+    .addEventListener("click", function() {
 
+      profile.remove();
 
-  /* CLICK OUTSIDE */
-
-  profile.addEventListener(
-    "click",
-    (event) => {
-
-      if (event.target === profile) {
-        closeProfile(profile);
-      }
-
-    }
-  );
-
-
-  /* ESC KEY */
-
-  document.addEventListener(
-    "keydown",
-    function escapeHandler(event) {
-
-      if (event.key === "Escape") {
-
-        closeProfile(profile);
-
-        document.removeEventListener(
-          "keydown",
-          escapeHandler
-        );
-
-      }
-
-    }
-  );
-
-
-  /* LOCK PAGE SCROLL */
-
-  document.body.style.overflow = "hidden";
-}
-
-
-/* =========================
-   CLOSE PROFILE
-========================= */
-
-function closeProfile(profile) {
-
-  if (!profile) return;
-
-
-  profile.style.opacity = "0";
-
-
-  setTimeout(() => {
-
-    profile.remove();
-
-    document.body.style.overflow = "";
-
-  }, 180);
+    });
 
 }
 
@@ -540,43 +292,33 @@ function closeProfile(profile) {
    SEARCH
 ========================= */
 
-searchInput.addEventListener(
-  "input",
-  function () {
+searchInput.addEventListener("input", function() {
 
-    const searchText =
-      this.value
-        .toLowerCase()
-        .trim();
+  const searchText =
+    this.value.toLowerCase().trim();
 
 
-    /* CATEGORY FILTER */
+  categories.forEach(function(category) {
 
-    categories.forEach(category => {
-
-      const service =
-        category
-          .querySelector("span")
-          .textContent
-          .toLowerCase();
+    const serviceName =
+      category
+        .querySelector("span")
+        .textContent
+        .toLowerCase();
 
 
-      category.style.display =
-        service.includes(searchText) ||
-        searchText === ""
-          ? "flex"
-          : "none";
+    category.style.display =
+      serviceName.includes(searchText) ||
+      searchText === ""
+        ? "flex"
+        : "none";
 
-    });
-
-
-    /* WORKER FILTER */
-
-    const workers =
-      document.querySelectorAll(".worker");
+  });
 
 
-    workers.forEach(worker => {
+  document
+    .querySelectorAll(".worker")
+    .forEach(function(worker) {
 
       const workerText =
         worker.textContent.toLowerCase();
@@ -590,82 +332,67 @@ searchInput.addEventListener(
 
     });
 
-  }
-);
+});
 
 
 /* =========================
    CATEGORY CLICK
 ========================= */
 
-categories.forEach(category => {
+categories.forEach(function(category) {
 
-  category.addEventListener(
-    "click",
-    function () {
+  category.addEventListener("click", function() {
 
-      const service =
-        this.dataset.service ||
-        this.querySelector("span")
-          .textContent;
+    const service =
+      this
+        .querySelector("span")
+        .textContent;
 
 
-      searchInput.value =
-        service;
+    searchInput.value = service;
 
 
-      searchInput.dispatchEvent(
-        new Event("input")
-      );
+    searchInput.dispatchEvent(
+      new Event("input")
+    );
 
 
-      document
-        .querySelector(".nearby")
-        .scrollIntoView({
-          behavior: "smooth",
-          block: "start"
-        });
+    window.scrollTo({
 
-    }
-  );
+      top: document.body.scrollHeight,
+
+      behavior: "smooth"
+
+    });
+
+  });
 
 });
 
 
 /* =========================
-   NAVIGATION UI
+   SECURITY
 ========================= */
 
-document
-  .querySelectorAll(".nav-item")
-  .forEach(item => {
+function escapeHTML(value) {
 
-    item.addEventListener(
-      "click",
-      function () {
+  return String(value ?? "")
 
-        document
-          .querySelectorAll(".nav-item")
-          .forEach(nav => {
-            nav.classList.remove("active");
-          });
+    .replace(/&/g, "&amp;")
 
+    .replace(/</g, "&lt;")
 
-        this.classList.add("active");
+    .replace(/>/g, "&gt;")
 
-      }
-    );
+    .replace(/"/g, "&quot;")
 
-  });
+    .replace(/'/g, "&#039;");
+
+}
 
 
 /* =========================
-   START APP
+   START
 ========================= */
-
-console.log(
-  "FindWorker connected to Supabase"
-);
-
 
 loadWorkers();
