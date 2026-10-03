@@ -3,18 +3,36 @@
 
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
+  <meta
+    name="theme-color"
+    content="#0b3d91"
+  >
 
   <title>FindWorker</title>
 
-  <link rel="stylesheet" href="style.css">
+  <!-- CACHE BUST: forces latest CSS -->
+  <link
+    rel="stylesheet"
+    href="style.css?v=5"
+  >
 </head>
+
 
 <body>
 
   <div class="app">
 
-    <!-- HEADER -->
+
+    <!-- =========================
+         HEADER
+    ========================== -->
+
     <header class="header">
 
       <div class="header-top">
@@ -33,49 +51,71 @@
 
 
         <div class="header-badge">
+
           <span class="live-dot"></span>
+
           Local Services
+
         </div>
 
       </div>
 
 
-      <!-- SEARCH -->
+      <!-- =========================
+           SEARCH
+      ========================== -->
+
       <div class="search">
 
         <span class="search-icon">
-          ⌕
+          🔍
         </span>
 
+
         <input
+          id="service-search"
           type="text"
           placeholder="What service do you need?"
           autocomplete="off"
-          id="service-search"
-          aria-label="Search services"
+          spellcheck="false"
         >
 
-        <span class="search-shortcut">
-          Search
-        </span>
+
+        <button
+          type="button"
+          class="search-clear"
+          id="search-clear"
+          aria-label="Clear search"
+        >
+          ×
+        </button>
 
       </div>
 
 
-      <!-- ALL SERVICE SEARCH RESULTS -->
+      <!-- ALL SERVICES DROPDOWN -->
+
       <div
-        class="service-suggestions"
         id="service-suggestions"
+        class="service-suggestions"
       ></div>
+
 
     </header>
 
 
-    <!-- CONTENT -->
+
+    <!-- =========================
+         MAIN CONTENT
+    ========================== -->
+
     <main class="content">
 
 
-      <!-- CATEGORIES -->
+      <!-- =========================
+           POPULAR SERVICES
+      ========================== -->
+
       <section>
 
         <div class="section-heading">
@@ -100,27 +140,30 @@
         </div>
 
 
-        <!-- POPULAR SERVICES -->
+
         <div class="categories">
 
 
-          <div
+          <button
+            type="button"
             class="category"
             data-service="Electrician"
           >
 
             <div class="icon">
-              🔧
+              ⚡
             </div>
 
             <span>
               Electrician
             </span>
 
-          </div>
+          </button>
 
 
-          <div
+
+          <button
+            type="button"
             class="category"
             data-service="Plumber"
           >
@@ -133,10 +176,12 @@
               Plumber
             </span>
 
-          </div>
+          </button>
 
 
-          <div
+
+          <button
+            type="button"
             class="category"
             data-service="AC Repair"
           >
@@ -149,10 +194,12 @@
               AC Repair
             </span>
 
-          </div>
+          </button>
 
 
-          <div
+
+          <button
+            type="button"
             class="category"
             data-service="Carpenter"
           >
@@ -165,10 +212,12 @@
               Carpenter
             </span>
 
-          </div>
+          </button>
 
 
-          <div
+
+          <button
+            type="button"
             class="category"
             data-service="Painter"
           >
@@ -181,10 +230,12 @@
               Painter
             </span>
 
-          </div>
+          </button>
 
 
-          <div
+
+          <button
+            type="button"
             class="category"
             data-service="Cleaner"
           >
@@ -197,10 +248,12 @@
               Cleaner
             </span>
 
-          </div>
+          </button>
 
 
-          <div
+
+          <button
+            type="button"
             class="category"
             data-service="Mobile Repair"
           >
@@ -213,12 +266,14 @@
               Mobile Repair
             </span>
 
-          </div>
+          </button>
 
 
-          <div
+
+          <button
+            type="button"
             class="category"
-            data-service="Computer"
+            data-service="Computer Repair"
           >
 
             <div class="icon">
@@ -229,23 +284,25 @@
               Computer
             </span>
 
-          </div>
+          </button>
 
 
-          <div
+
+          <button
+            type="button"
             class="category"
             data-service="Mechanic"
           >
 
             <div class="icon">
-              🚗
+              🔧
             </div>
 
             <span>
               Mechanic
             </span>
 
-          </div>
+          </button>
 
 
         </div>
@@ -253,7 +310,11 @@
       </section>
 
 
-      <!-- WORKERS -->
+
+      <!-- =========================
+           WORKERS
+      ========================== -->
+
       <section class="nearby">
 
 
@@ -279,7 +340,9 @@
         </div>
 
 
-        <!-- WORKER LIST -->
+
+        <!-- REAL WORKER LIST -->
+
         <div id="worker-list">
 
           <div class="loading-card">
@@ -305,14 +368,22 @@
 
       </section>
 
+
     </main>
 
 
-    <!-- BOTTOM NAV -->
+
+    <!-- =========================
+         BOTTOM NAV
+    ========================== -->
+
     <nav class="nav">
 
 
-      <div class="nav-item active">
+      <button
+        type="button"
+        class="nav-item active"
+      >
 
         <div class="nav-icon">
           ⌂
@@ -322,10 +393,15 @@
           Home
         </span>
 
-      </div>
+      </button>
 
 
-      <div class="nav-item">
+
+      <button
+        type="button"
+        class="nav-item"
+        id="bottom-search"
+      >
 
         <div class="nav-icon">
           ⌕
@@ -335,10 +411,14 @@
           Search
         </span>
 
-      </div>
+      </button>
 
 
-      <div class="nav-item">
+
+      <button
+        type="button"
+        class="nav-item"
+      >
 
         <div class="nav-icon">
           ▣
@@ -348,10 +428,14 @@
           Requests
         </span>
 
-      </div>
+      </button>
 
 
-      <div class="nav-item">
+
+      <button
+        type="button"
+        class="nav-item"
+      >
 
         <div class="nav-icon">
           ◉
@@ -361,22 +445,34 @@
           Profile
         </span>
 
-      </div>
+      </button>
 
 
     </nav>
 
+
   </div>
 
 
-  <!-- SUPABASE -->
+
+  <!-- =========================
+       SUPABASE
+  ========================== -->
+
   <script
-    src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2">
-  </script>
+    src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"
+  ></script>
 
 
-  <!-- APP -->
-  <script src="app.js"></script>
+
+  <!-- =========================
+       APP JAVASCRIPT
+       CACHE BUST
+  ========================== -->
+
+  <script
+    src="app.js?v=5"
+  ></script>
 
 
 </body>
