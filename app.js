@@ -89,12 +89,16 @@ function getWorkerPhoto(worker) {
 }
 
 /* =========================
-   SERVICE SUGGESTIONS
+   SERVICE SEARCH
+   FIXED:
+   NO EMOJI IN SEARCH SUGGESTIONS
 ========================= */
 
 if (serviceSearch) {
   serviceSearch.addEventListener("input", () => {
-    const value = serviceSearch.value.trim().toLowerCase();
+
+    const value =
+      serviceSearch.value.trim().toLowerCase();
 
     if (!serviceSuggestions) return;
 
@@ -104,9 +108,11 @@ if (serviceSearch) {
       return;
     }
 
-    const matches = ALL_SERVICES.filter(service =>
-      service.toLowerCase().includes(value)
-    ).slice(0, 8);
+    const matches = ALL_SERVICES
+      .filter(service =>
+        service.toLowerCase().includes(value)
+      )
+      .slice(0, 8);
 
     if (!matches.length) {
       serviceSuggestions.innerHTML = "";
@@ -114,10 +120,19 @@ if (serviceSearch) {
       return;
     }
 
+    /*
+      IMPORTANT:
+      No getServiceIcon() here.
+      Search suggestions will show ONLY service names.
+    */
+
     serviceSuggestions.innerHTML = matches
       .map(service => `
-        <div class="service-suggestion-item" data-service="${escapeHTML(service)}">
-          ${getServiceIcon(service)} ${escapeHTML(service)}
+        <div
+          class="service-suggestion-item"
+          data-service="${escapeHTML(service)}"
+        >
+          ${escapeHTML(service)}
         </div>
       `)
       .join("");
@@ -127,22 +142,67 @@ if (serviceSearch) {
     serviceSuggestions
       .querySelectorAll(".service-suggestion-item")
       .forEach(item => {
+
         item.addEventListener("click", () => {
-          serviceSearch.value = item.dataset.service;
+
+          serviceSearch.value =
+            item.dataset.service;
+
           serviceSuggestions.innerHTML = "";
           serviceSuggestions.style.display = "none";
 
           loadWorkers(item.dataset.service);
         });
+
       });
   });
 }
+
+/* =========================
+   SEARCH ENTER
+========================= */
+
+if (serviceSearch) {
+  serviceSearch.addEventListener("keydown", event => {
+
+    if (event.key !== "Enter") return;
+
+    event.preventDefault();
+
+    const value =
+      serviceSearch.value.trim();
+
+    serviceSuggestions.innerHTML = "";
+    serviceSuggestions.style.display = "none";
+
+    loadWorkers(value);
+  });
+}
+
+/* =========================
+   CLICK OUTSIDE SEARCH
+========================= */
+
+document.addEventListener("click", event => {
+
+  if (!serviceSearch || !serviceSuggestions) return;
+
+  if (
+    event.target !== serviceSearch &&
+    !serviceSuggestions.contains(event.target)
+  ) {
+    serviceSuggestions.innerHTML = "";
+    serviceSuggestions.style.display = "none";
+  }
+
+});
 
 /* =========================
    LOAD APPROVED WORKERS
 ========================= */
 
 async function loadWorkers(serviceFilter = "") {
+
   if (!workerList) return;
 
   workerList.innerHTML = `
@@ -152,20 +212,31 @@ async function loadWorkers(serviceFilter = "") {
   `;
 
   try {
+
     let query = supabaseClient
       .from("workers")
       .select("*")
       .eq("verification_status", "approved");
 
-    if (serviceFilter && serviceFilter.trim()) {
-      query = query.ilike("service", `%${serviceFilter.trim()}%`);
+    if (
+      serviceFilter &&
+      serviceFilter.trim()
+    ) {
+      query = query.ilike(
+        "service",
+        `%${serviceFilter.trim()}%`
+      );
     }
 
-    const { data, error } = await query;
+    const {
+      data,
+      error
+    } = await query;
 
     if (error) throw error;
 
     if (!data || data.length === 0) {
+
       workerList.innerHTML = `
         <div class="no-workers">
           <div style="font-size:42px;">🔍</div>
@@ -173,28 +244,48 @@ async function loadWorkers(serviceFilter = "") {
           <p>Try another service or area.</p>
         </div>
       `;
+
       return;
     }
 
     workerList.innerHTML = data
-      .map(worker => createWorkerCard(worker))
+      .map(worker =>
+        createWorkerCard(worker)
+      )
       .join("");
 
     workerList
       .querySelectorAll("[data-worker-id]")
       .forEach(card => {
-        card.addEventListener("click", () => {
-          const id = Number(card.dataset.workerId);
-          const worker = data.find(item => Number(item.id) === id);
 
-          if (worker) {
-            openWorkerProfile(worker);
+        card.addEventListener(
+          "click",
+          () => {
+
+            const id =
+              Number(card.dataset.workerId);
+
+            const worker =
+              data.find(
+                item =>
+                  Number(item.id) === id
+              );
+
+            if (worker) {
+              openWorkerProfile(worker);
+            }
+
           }
-        });
+        );
+
       });
 
   } catch (error) {
-    console.error("Worker loading error:", error);
+
+    console.error(
+      "Worker loading error:",
+      error
+    );
 
     workerList.innerHTML = `
       <div class="no-workers">
@@ -211,104 +302,181 @@ async function loadWorkers(serviceFilter = "") {
 ========================= */
 
 function createWorkerCard(worker) {
-  const photo = getWorkerPhoto(worker);
-  const startingCharge =
-    worker["starting charge"] ?? worker.starting_charge ?? "";
 
-  const experience = worker.experience ?? "";
-  const availability = worker.availability ?? "";
-  const area = worker.area ?? "";
+  const photo =
+    getWorkerPhoto(worker);
+
+  const startingCharge =
+    worker["starting charge"] ??
+    worker.starting_charge ??
+    "";
+
+  const experience =
+    worker.experience ?? "";
+
+  const availability =
+    worker.availability ?? "";
+
+  const area =
+    worker.area ?? "";
 
   return `
-    <div class="worker-card" data-worker-id="${Number(worker.id)}">
+    <div
+      class="worker-card"
+      data-worker-id="${Number(worker.id)}"
+    >
 
       <div class="worker-photo">
+
         ${
           photo
-            ? `<img src="${escapeHTML(photo)}" alt="${escapeHTML(worker.name)}">`
-            : `<div class="worker-photo-placeholder">
+            ? `
+              <img
+                src="${escapeHTML(photo)}"
+                alt="${escapeHTML(worker.name)}"
+              >
+            `
+            : `
+              <div class="worker-photo-placeholder">
                 ${getServiceIcon(worker.service)}
-              </div>`
+              </div>
+            `
         }
+
       </div>
 
       <div class="worker-card-content">
 
-        <h3>${escapeHTML(worker.name || "Worker")}</h3>
+        <h3>
+          ${escapeHTML(
+            worker.name || "Worker"
+          )}
+        </h3>
 
         <div class="worker-service">
           ${getServiceIcon(worker.service)}
-          ${escapeHTML(worker.service || "Service")}
+          ${escapeHTML(
+            worker.service || "Service"
+          )}
         </div>
 
         <div class="worker-meta">
-          <span>📍 ${escapeHTML(area || "Area not specified")}</span>
+          <span>
+            📍
+            ${escapeHTML(
+              area || "Area not specified"
+            )}
+          </span>
         </div>
 
         <div class="worker-meta">
-          <span>💼 ${escapeHTML(experience || "Experience not specified")} years</span>
+          <span>
+            💼
+            ${escapeHTML(
+              experience ||
+              "Experience not specified"
+            )}
+            years
+          </span>
         </div>
 
         ${
           startingCharge
-            ? `<div class="worker-charge">
-                Starting ₹${escapeHTML(startingCharge)}
-              </div>`
+            ? `
+              <div class="worker-charge">
+                Starting ₹${escapeHTML(
+                  startingCharge
+                )}
+              </div>
+            `
             : ""
         }
 
         ${
           availability
-            ? `<div class="worker-availability">
-                ${escapeHTML(availability)}
-              </div>`
+            ? `
+              <div class="worker-availability">
+                ${escapeHTML(
+                  availability
+                )}
+              </div>
+            `
             : ""
         }
 
       </div>
+
     </div>
   `;
 }
 
 /* =========================
-   WORKER PROFILE MODAL
+   WORKER PROFILE
 ========================= */
 
 function openWorkerProfile(worker) {
+
   closeAllModals();
 
-  const photo = getWorkerPhoto(worker);
-  const startingCharge =
-    worker["starting charge"] ?? worker.starting_charge ?? "";
+  const photo =
+    getWorkerPhoto(worker);
 
-  const modal = document.createElement("div");
-  modal.className = "fw-modal-overlay";
-  modal.id = "worker-profile-modal";
+  const startingCharge =
+    worker["starting charge"] ??
+    worker.starting_charge ??
+    "";
+
+  const modal =
+    document.createElement("div");
+
+  modal.className =
+    "fw-modal-overlay";
+
+  modal.id =
+    "worker-profile-modal";
 
   modal.innerHTML = `
     <div class="fw-modal">
 
-      <button class="fw-modal-close" id="close-worker-profile">
+      <button
+        class="fw-modal-close"
+        id="close-worker-profile"
+      >
         ×
       </button>
 
       <div class="fw-profile-header">
 
         <div class="fw-profile-photo">
+
           ${
             photo
-              ? `<img src="${escapeHTML(photo)}" alt="${escapeHTML(worker.name)}">`
-              : `<div class="worker-photo-placeholder">
+              ? `
+                <img
+                  src="${escapeHTML(photo)}"
+                  alt="${escapeHTML(worker.name)}"
+                >
+              `
+              : `
+                <div class="worker-photo-placeholder">
                   ${getServiceIcon(worker.service)}
-                </div>`
+                </div>
+              `
           }
+
         </div>
 
-        <h2>${escapeHTML(worker.name || "Worker")}</h2>
+        <h2>
+          ${escapeHTML(
+            worker.name || "Worker"
+          )}
+        </h2>
 
         <div class="fw-profile-service">
           ${getServiceIcon(worker.service)}
-          ${escapeHTML(worker.service || "")}
+          ${escapeHTML(
+            worker.service || ""
+          )}
         </div>
 
       </div>
@@ -317,36 +485,68 @@ function openWorkerProfile(worker) {
 
         <div>
           <strong>📍 Area</strong>
-          <span>${escapeHTML(worker.area || "Not specified")}</span>
+          <span>
+            ${escapeHTML(
+              worker.area ||
+              "Not specified"
+            )}
+          </span>
         </div>
 
         <div>
           <strong>💼 Experience</strong>
-          <span>${escapeHTML(worker.experience || "0")} years</span>
+          <span>
+            ${escapeHTML(
+              worker.experience || "0"
+            )}
+            years
+          </span>
         </div>
 
         ${
           startingCharge
             ? `
               <div>
-                <strong>💰 Starting Charge</strong>
-                <span>₹${escapeHTML(startingCharge)}</span>
+                <strong>
+                  💰 Starting Charge
+                </strong>
+
+                <span>
+                  ₹${escapeHTML(
+                    startingCharge
+                  )}
+                </span>
               </div>
             `
             : ""
         }
 
         <div>
-          <strong>🕒 Availability</strong>
-          <span>${escapeHTML(worker.availability || "Not specified")}</span>
+          <strong>
+            🕒 Availability
+          </strong>
+
+          <span>
+            ${escapeHTML(
+              worker.availability ||
+              "Not specified"
+            )}
+          </span>
         </div>
 
         ${
           worker.description
             ? `
               <div>
-                <strong>📝 About</strong>
-                <span>${escapeHTML(worker.description)}</span>
+                <strong>
+                  📝 About
+                </strong>
+
+                <span>
+                  ${escapeHTML(
+                    worker.description
+                  )}
+                </span>
               </div>
             `
             : ""
@@ -358,14 +558,18 @@ function openWorkerProfile(worker) {
 
         <a
           class="fw-action-call"
-          href="tel:${escapeHTML(worker.mobile || "")}"
+          href="tel:${escapeHTML(
+            worker.mobile || ""
+          )}"
         >
           📞 Call
         </a>
 
         <a
           class="fw-action-whatsapp"
-          href="https://wa.me/${formatWhatsAppNumber(worker.mobile)}"
+          href="https://wa.me/${formatWhatsAppNumber(
+            worker.mobile
+          )}"
           target="_blank"
           rel="noopener"
         >
@@ -387,25 +591,52 @@ function openWorkerProfile(worker) {
   document.body.appendChild(modal);
 
   document
-    .getElementById("close-worker-profile")
-    .addEventListener("click", () => modal.remove());
+    .getElementById(
+      "close-worker-profile"
+    )
+    .addEventListener(
+      "click",
+      () => modal.remove()
+    );
 
-  modal.addEventListener("click", event => {
-    if (event.target === modal) {
-      modal.remove();
+  modal.addEventListener(
+    "click",
+    event => {
+
+      if (event.target === modal) {
+        modal.remove();
+      }
+
     }
-  });
+  );
 
   document
-    .getElementById("request-service-btn")
-    .addEventListener("click", () => {
-      modal.remove();
-      openRequestServiceModal(worker);
-    });
+    .getElementById(
+      "request-service-btn"
+    )
+    .addEventListener(
+      "click",
+      () => {
+
+        modal.remove();
+
+        openRequestServiceModal(
+          worker
+        );
+
+      }
+    );
 }
 
+/* =========================
+   WHATSAPP NUMBER
+========================= */
+
 function formatWhatsAppNumber(number) {
-  let value = String(number || "").replace(/\D/g, "");
+
+  let value =
+    String(number || "")
+      .replace(/\D/g, "");
 
   if (value.length === 10) {
     value = "91" + value;
@@ -415,38 +646,60 @@ function formatWhatsAppNumber(number) {
 }
 
 /* =========================
-   REQUEST SERVICE
+   REQUEST SERVICE MODAL
 ========================= */
 
 function openRequestServiceModal(worker) {
+
   closeAllModals();
 
   injectRequestModalStyles();
 
-  const modal = document.createElement("div");
-  modal.className = "fw-modal-overlay";
-  modal.id = "request-service-modal";
+  const modal =
+    document.createElement("div");
+
+  modal.className =
+    "fw-modal-overlay";
+
+  modal.id =
+    "request-service-modal";
 
   modal.innerHTML = `
     <div class="fw-modal fw-request-modal">
 
-      <button class="fw-modal-close" id="close-request-modal">
+      <button
+        class="fw-modal-close"
+        id="close-request-modal"
+      >
         ×
       </button>
 
       <div class="fw-request-header">
-        <div class="fw-request-icon">🛠️</div>
-        <h2>Request Service</h2>
+
+        <div class="fw-request-icon">
+          🛠️
+        </div>
+
+        <h2>
+          Request Service
+        </h2>
+
         <p>
           Send your service request directly to
-          <strong>${escapeHTML(worker.name)}</strong>
+          <strong>
+            ${escapeHTML(
+              worker.name
+            )}
+          </strong>
         </p>
+
       </div>
 
       <form id="request-service-form">
 
         <label>
           Your Name
+
           <input
             type="text"
             id="customer-name"
@@ -457,6 +710,7 @@ function openRequestServiceModal(worker) {
 
         <label>
           Mobile Number
+
           <input
             type="tel"
             id="customer-mobile"
@@ -468,15 +722,19 @@ function openRequestServiceModal(worker) {
 
         <label>
           Service
+
           <input
             type="text"
-            value="${escapeHTML(worker.service || "")}"
+            value="${escapeHTML(
+              worker.service || ""
+            )}"
             readonly
           >
         </label>
 
         <label>
           Your Area
+
           <input
             type="text"
             id="customer-area"
@@ -487,17 +745,23 @@ function openRequestServiceModal(worker) {
 
         <label>
           Request Details
+
           <textarea
             id="request-details"
             placeholder="Describe what you need..."
           ></textarea>
         </label>
 
-        <button type="submit" class="fw-submit-request">
+        <button
+          type="submit"
+          class="fw-submit-request"
+        >
           Send Request
         </button>
 
-        <div id="request-form-message"></div>
+        <div
+          id="request-form-message"
+        ></div>
 
       </form>
 
@@ -507,64 +771,117 @@ function openRequestServiceModal(worker) {
   document.body.appendChild(modal);
 
   document
-    .getElementById("close-request-modal")
-    .addEventListener("click", () => modal.remove());
+    .getElementById(
+      "close-request-modal"
+    )
+    .addEventListener(
+      "click",
+      () => modal.remove()
+    );
 
-  modal.addEventListener("click", event => {
-    if (event.target === modal) {
-      modal.remove();
+  modal.addEventListener(
+    "click",
+    event => {
+
+      if (event.target === modal) {
+        modal.remove();
+      }
+
     }
-  });
+  );
 
   document
-    .getElementById("request-service-form")
-    .addEventListener("submit", event => {
-      submitServiceRequest(event, worker);
-    });
+    .getElementById(
+      "request-service-form"
+    )
+    .addEventListener(
+      "submit",
+      event => {
+        submitServiceRequest(
+          event,
+          worker
+        );
+      }
+    );
 }
 
-async function submitServiceRequest(event, worker) {
+/* =========================
+   SUBMIT REQUEST
+========================= */
+
+async function submitServiceRequest(
+  event,
+  worker
+) {
+
   event.preventDefault();
 
-  const message = document.getElementById("request-form-message");
-  const submitButton = event.target.querySelector("button[type='submit']");
+  const message =
+    document.getElementById(
+      "request-form-message"
+    );
+
+  const submitButton =
+    event.target.querySelector(
+      "button[type='submit']"
+    );
 
   const customerName =
-    document.getElementById("customer-name").value.trim();
+    document
+      .getElementById("customer-name")
+      .value
+      .trim();
 
   const customerMobile =
-    document.getElementById("customer-mobile").value.trim();
+    document
+      .getElementById("customer-mobile")
+      .value
+      .trim();
 
   const customerArea =
-    document.getElementById("customer-area").value.trim();
+    document
+      .getElementById("customer-area")
+      .value
+      .trim();
 
   const requestDetails =
-    document.getElementById("request-details").value.trim();
+    document
+      .getElementById("request-details")
+      .value
+      .trim();
 
-  if (!/^\d{10}$/.test(customerMobile)) {
+  if (!/^\d{10}$/.test(
+    customerMobile
+  )) {
+
     message.innerHTML = `
       <div class="fw-error-message">
-        Please enter a valid 10 digit mobile number.
+        Please enter a valid
+        10 digit mobile number.
       </div>
     `;
+
     return;
   }
 
   submitButton.disabled = true;
-  submitButton.textContent = "Sending...";
+  submitButton.textContent =
+    "Sending...";
 
   try {
-    const { error } = await supabaseClient
-      .from("service_requests")
-      .insert({
-        worker_id: worker.id,
-        customer_name: customerName,
-        customer_mobile: customerMobile,
-        service: worker.service,
-        area: customerArea,
-        request_details: requestDetails,
-        status: "pending"
-      });
+
+    const { error } =
+      await supabaseClient
+        .from("service_requests")
+        .insert({
+          worker_id: worker.id,
+          customer_name: customerName,
+          customer_mobile: customerMobile,
+          service: worker.service,
+          area: customerArea,
+          request_details: requestDetails,
+          status: "pending"
+        });
 
     if (error) throw error;
 
@@ -572,550 +889,47 @@ async function submitServiceRequest(event, worker) {
       <div class="fw-success-message">
         ✅ Request sent successfully!
         <br>
-        ${escapeHTML(worker.name)} will receive your service request.
+        ${escapeHTML(
+          worker.name
+        )}
+        will receive your service request.
       </div>
     `;
 
     event.target.reset();
 
     setTimeout(() => {
-      const modal = document.getElementById("request-service-modal");
-      if (modal) modal.remove();
-    }, 2200);
 
-  } catch (error) {
-    console.error("Request error:", error);
-
-    message.innerHTML = `
-      <div class="fw-error-message">
-        ❌ Unable to send request. Please try again.
-      </div>
-    `;
-
-    submitButton.disabled = false;
-    submitButton.textContent = "Send Request";
-  }
-}
-
-/* =========================
-   WORKER REGISTRATION
-========================= */
-
-function openWorkerRegistration() {
-  closeAllModals();
-
-  injectWorkerRegistrationStyles();
-
-  const modal = document.createElement("div");
-  modal.className = "fw-modal-overlay";
-  modal.id = "worker-registration-modal";
-
-  modal.innerHTML = `
-    <div class="fw-modal fw-registration-modal">
-
-      <button class="fw-modal-close" id="close-registration-modal">
-        ×
-      </button>
-
-      <div class="fw-registration-header">
-        <div class="fw-registration-icon">👷</div>
-        <h2>Register as a Worker</h2>
-        <p>
-          Add your service details and get discovered by customers.
-        </p>
-      </div>
-
-      <form id="worker-registration-form">
-
-        <label>
-          Full Name *
-          <input
-            type="text"
-            id="worker-name"
-            required
-            placeholder="Enter your full name"
-          >
-        </label>
-
-        <label>
-          Mobile Number *
-          <input
-            type="tel"
-            id="worker-mobile"
-            required
-            maxlength="10"
-            placeholder="10 digit mobile number"
-          >
-        </label>
-
-        <label>
-          Service *
-          <select id="worker-service" required>
-            <option value="">Select your service</option>
-
-            ${ALL_SERVICES.map(service => `
-              <option value="${escapeHTML(service)}">
-                ${escapeHTML(service)}
-              </option>
-            `).join("")}
-
-          </select>
-        </label>
-
-        <label>
-          Area *
-          <input
-            type="text"
-            id="worker-area"
-            required
-            placeholder="Enter your service area"
-          >
-        </label>
-
-        <label>
-          Experience (Years) *
-          <input
-            type="number"
-            id="worker-experience"
-            required
-            min="0"
-            max="60"
-            step="0.5"
-            placeholder="Example: 5"
-          >
-        </label>
-
-        <div
-          id="experience-proof-info"
-          class="fw-proof-info"
-        >
-          📄 Experience proof is optional for 1–5 years.
-          <br>
-          For <strong>6 years or more</strong>, proof is mandatory.
-        </div>
-
-        <label>
-          Starting Charge
-          <input
-            type="text"
-            id="worker-charge"
-            placeholder="Example: 300"
-          >
-        </label>
-
-        <label>
-          Availability
-          <input
-            type="text"
-            id="worker-availability"
-            placeholder="Example: Mon-Sat, 9 AM - 7 PM"
-          >
-        </label>
-
-        <label>
-          Description
-          <textarea
-            id="worker-description"
-            placeholder="Tell customers about your work..."
-          ></textarea>
-        </label>
-
-        <label>
-          Worker Photo
-          <input
-            type="file"
-            id="worker-photo"
-            accept="image/*"
-          >
-        </label>
-
-        <label>
-          Experience Proof
-          <input
-            type="file"
-            id="worker-experience-proof"
-            accept="image/*,.pdf"
-          >
-          <small id="proof-required-text">
-            Optional for 1–5 years.
-          </small>
-        </label>
-
-        <div
-          id="worker-registration-message"
-          class="fw-registration-message"
-        ></div>
-
-        <button
-          type="submit"
-          class="fw-submit-worker"
-        >
-          Register as Worker
-        </button>
-
-      </form>
-
-    </div>
-  `;
-
-  document.body.appendChild(modal);
-
-  document
-    .getElementById("close-registration-modal")
-    .addEventListener("click", () => modal.remove());
-
-  modal.addEventListener("click", event => {
-    if (event.target === modal) {
-      modal.remove();
-    }
-  });
-
-  const experienceInput =
-    document.getElementById("worker-experience");
-
-  const proofInput =
-    document.getElementById("worker-experience-proof");
-
-  const proofText =
-    document.getElementById("proof-required-text");
-
-  function updateProofRequirement() {
-    const experience = Number(experienceInput.value);
-
-    if (experience >= 6) {
-      proofInput.required = true;
-
-      proofText.innerHTML = `
-        <strong style="color:#dc2626;">
-          Required: 6+ years experience needs proof.
-        </strong>
-      `;
-    } else {
-      proofInput.required = false;
-
-      proofText.textContent =
-        "Optional for 1–5 years.";
-    }
-  }
-
-  experienceInput.addEventListener(
-    "input",
-    updateProofRequirement
-  );
-
-  document
-    .getElementById("worker-registration-form")
-    .addEventListener(
-      "submit",
-      submitWorkerRegistration
-    );
-}
-
-/* =========================
-   SUBMIT WORKER REGISTRATION
-========================= */
-
-async function submitWorkerRegistration(event) {
-  event.preventDefault();
-
-  const form = event.target;
-
-  const message =
-    document.getElementById("worker-registration-message");
-
-  const submitButton =
-    form.querySelector("button[type='submit']");
-
-  const name =
-    document.getElementById("worker-name").value.trim();
-
-  const mobile =
-    document.getElementById("worker-mobile").value.trim();
-
-  const service =
-    document.getElementById("worker-service").value.trim();
-
-  const area =
-    document.getElementById("worker-area").value.trim();
-
-  const experience =
-    Number(document.getElementById("worker-experience").value);
-
-  const startingCharge =
-    document.getElementById("worker-charge").value.trim();
-
-  const availability =
-    document.getElementById("worker-availability").value.trim();
-
-  const description =
-    document.getElementById("worker-description").value.trim();
-
-  const photoFile =
-    document.getElementById("worker-photo").files[0];
-
-  const proofFile =
-    document.getElementById("worker-experience-proof").files[0];
-
-  if (!/^\d{10}$/.test(mobile)) {
-    message.innerHTML = `
-      <div class="fw-error-message">
-        ❌ Please enter a valid 10 digit mobile number.
-      </div>
-    `;
-    return;
-  }
-
-  if (Number.isNaN(experience) || experience < 0) {
-    message.innerHTML = `
-      <div class="fw-error-message">
-        ❌ Please enter valid experience.
-      </div>
-    `;
-    return;
-  }
-
-  /* 6+ YEARS = PROOF REQUIRED */
-
-  if (experience >= 6 && !proofFile) {
-    message.innerHTML = `
-      <div class="fw-error-message">
-        ❌ Experience proof is mandatory for 6 years or more.
-      </div>
-    `;
-    return;
-  }
-
-  /* FILE SIZE LIMIT */
-
-  if (proofFile && proofFile.size > 10 * 1024 * 1024) {
-    message.innerHTML = `
-      <div class="fw-error-message">
-        ❌ Experience proof must be 10 MB or smaller.
-      </div>
-    `;
-    return;
-  }
-
-  if (photoFile && photoFile.size > 5 * 1024 * 1024) {
-    message.innerHTML = `
-      <div class="fw-error-message">
-        ❌ Worker photo must be 5 MB or smaller.
-      </div>
-    `;
-    return;
-  }
-
-  submitButton.disabled = true;
-  submitButton.textContent = "Registering...";
-
-  try {
-
-    /* =========================
-       UNIQUE ID FOR FILE NAMES
-    ========================= */
-
-    const uniqueId =
-      `${Date.now()}-${Math.random().toString(36).substring(2, 10)}`;
-
-    let photoUrl = "";
-    let experienceProofPath = "";
-
-    /* =========================
-       PHOTO UPLOAD
-    ========================= */
-
-    if (photoFile) {
-
-      const extension =
-        getFileExtension(photoFile.name);
-
-      const photoPath =
-        `worker-photos/${uniqueId}.${extension}`;
-
-      const { error: photoUploadError } =
-        await supabaseClient.storage
-          .from("experience-proofs")
-          .upload(
-            photoPath,
-            photoFile,
-            {
-              cacheControl: "3600",
-              upsert: false
-            }
-          );
-
-      if (photoUploadError) {
-        throw photoUploadError;
-      }
-
-      const {
-        data: photoPublicData
-      } =
-        supabaseClient.storage
-          .from("experience-proofs")
-          .getPublicUrl(photoPath);
-
-      photoUrl =
-        photoPublicData?.publicUrl || "";
-    }
-
-    /* =========================
-       EXPERIENCE PROOF UPLOAD
-    ========================= */
-
-    if (proofFile) {
-
-      const extension =
-        getFileExtension(proofFile.name);
-
-      const proofPath =
-        `experience-proofs/${uniqueId}.${extension}`;
-
-      const { error: proofUploadError } =
-        await supabaseClient.storage
-          .from("experience-proofs")
-          .upload(
-            proofPath,
-            proofFile,
-            {
-              cacheControl: "3600",
-              upsert: false
-            }
-          );
-
-      if (proofUploadError) {
-        throw proofUploadError;
-      }
-
-      experienceProofPath = proofPath;
-    }
-
-    /* =========================
-       INSERT WORKER
-    ========================= */
-
-    const workerData = {
-      name: name,
-      mobile: mobile,
-      service: service,
-      area: area,
-      experience: experience,
-      "starting charge": startingCharge,
-      availability: availability,
-      description: description,
-      verification_status: "pending",
-      "photo url": photoUrl,
-      experience_proof: experienceProofPath
-    };
-
-    const {
-      error: workerInsertError
-    } = await supabaseClient
-      .from("workers")
-      .insert(workerData);
-
-    if (workerInsertError) {
-      throw workerInsertError;
-    }
-
-    /* =========================
-       SUCCESS
-    ========================= */
-
-    message.innerHTML = `
-      <div class="fw-success-message">
-        ✅ Registration submitted successfully!
-        <br><br>
-        Your profile is now <strong>pending verification</strong>.
-        <br>
-        It will appear to customers after approval.
-      </div>
-    `;
-
-    form.reset();
-
-    setTimeout(() => {
       const modal =
         document.getElementById(
-          "worker-registration-modal"
+          "request-service-modal"
         );
 
-      if (modal) modal.remove();
-    }, 3500);
+      if (modal) {
+        modal.remove();
+      }
+
+    }, 2200);
 
   } catch (error) {
 
     console.error(
-      "Worker registration error:",
+      "Request error:",
       error
     );
 
     message.innerHTML = `
       <div class="fw-error-message">
-        ❌ Registration failed.
-        <br>
-        ${escapeHTML(
-          error?.message ||
-          "Please try again."
-        )}
+        ❌ Unable to send request.
+        Please try again.
       </div>
     `;
 
     submitButton.disabled = false;
+
     submitButton.textContent =
-      "Register as Worker";
+      "Send Request";
   }
-}
-
-/* =========================
-   FILE EXTENSION
-========================= */
-
-function getFileExtension(filename) {
-  const parts =
-    String(filename || "").split(".");
-
-  if (parts.length < 2) {
-    return "file";
-  }
-
-  return parts.pop()
-    .toLowerCase()
-    .replace(/[^a-z0-9]/g, "");
-}
-
-/* =========================
-   PROFILE NAV → WORKER
-   REGISTRATION
-========================= */
-
-function setupWorkerRegistrationButton() {
-
-  const navItems =
-    document.querySelectorAll(".nav-item");
-
-  if (!navItems.length) return;
-
-  /*
-    Existing bottom navigation:
-    Home / Search / Requests / Profile
-
-    We keep the existing navigation and
-    use Profile as the entry point for
-    worker registration.
-  */
-
-  const profileNav =
-    navItems[navItems.length - 1];
-
-  if (!profileNav) return;
-
-  profileNav.addEventListener("click", event => {
-
-    event.preventDefault();
-
-    openWorkerRegistration();
-  });
 }
 
 /* =========================
@@ -1125,26 +939,36 @@ function setupWorkerRegistrationButton() {
 function closeAllModals() {
 
   document
-    .querySelectorAll(".fw-modal-overlay")
-    .forEach(modal => modal.remove());
+    .querySelectorAll(
+      ".fw-modal-overlay"
+    )
+    .forEach(modal =>
+      modal.remove()
+    );
 }
 
 /* =========================
-   REQUEST SERVICE CSS
+   REQUEST MODAL CSS
 ========================= */
 
 function injectRequestModalStyles() {
 
-  if (document.getElementById("fw-request-styles")) {
+  if (
+    document.getElementById(
+      "fw-request-styles"
+    )
+  ) {
     return;
   }
 
   const style =
     document.createElement("style");
 
-  style.id = "fw-request-styles";
+  style.id =
+    "fw-request-styles";
 
   style.textContent = `
+
     .fw-modal-overlay {
       position: fixed;
       inset: 0;
@@ -1199,8 +1023,7 @@ function injectRequestModalStyles() {
       font-size: 14px;
     }
 
-    .fw-request-modal label,
-    .fw-registration-modal label {
+    .fw-request-modal label {
       display: block;
       margin-bottom: 14px;
       font-weight: 600;
@@ -1208,10 +1031,7 @@ function injectRequestModalStyles() {
     }
 
     .fw-request-modal input,
-    .fw-request-modal textarea,
-    .fw-registration-modal input,
-    .fw-registration-modal textarea,
-    .fw-registration-modal select {
+    .fw-request-modal textarea {
       width: 100%;
       box-sizing: border-box;
       margin-top: 6px;
@@ -1224,22 +1044,19 @@ function injectRequestModalStyles() {
     }
 
     .fw-request-modal input:focus,
-    .fw-request-modal textarea:focus,
-    .fw-registration-modal input:focus,
-    .fw-registration-modal textarea:focus,
-    .fw-registration-modal select:focus {
+    .fw-request-modal textarea:focus {
       border-color: #2563eb;
-      box-shadow: 0 0 0 3px rgba(37,99,235,.1);
+      box-shadow:
+        0 0 0 3px
+        rgba(37,99,235,.1);
     }
 
-    .fw-request-modal textarea,
-    .fw-registration-modal textarea {
+    .fw-request-modal textarea {
       min-height: 90px;
       resize: vertical;
     }
 
-    .fw-submit-request,
-    .fw-submit-worker {
+    .fw-submit-request {
       width: 100%;
       border: 0;
       border-radius: 13px;
@@ -1251,8 +1068,7 @@ function injectRequestModalStyles() {
       cursor: pointer;
     }
 
-    .fw-submit-request:disabled,
-    .fw-submit-worker:disabled {
+    .fw-submit-request:disabled {
       opacity: .65;
       cursor: not-allowed;
     }
@@ -1276,73 +1092,7 @@ function injectRequestModalStyles() {
       text-align: center;
       font-size: 14px;
     }
-  `;
 
-  document.head.appendChild(style);
-}
-
-/* =========================
-   WORKER REGISTRATION CSS
-========================= */
-
-function injectWorkerRegistrationStyles() {
-
-  if (document.getElementById("fw-registration-styles")) {
-    return;
-  }
-
-  const style =
-    document.createElement("style");
-
-  style.id = "fw-registration-styles";
-
-  style.textContent = `
-    .fw-registration-header {
-      text-align: center;
-      margin-bottom: 20px;
-    }
-
-    .fw-registration-icon {
-      font-size: 44px;
-      margin-bottom: 5px;
-    }
-
-    .fw-registration-header h2 {
-      margin: 5px 0;
-      color: #0f172a;
-    }
-
-    .fw-registration-header p {
-      color: #64748b;
-      font-size: 14px;
-      margin: 5px 20px;
-    }
-
-    .fw-proof-info {
-      margin: -4px 0 15px;
-      padding: 12px;
-      border-radius: 12px;
-      background: #eff6ff;
-      color: #1d4ed8;
-      font-size: 13px;
-      line-height: 1.5;
-    }
-
-    .fw-registration-modal small {
-      display: block;
-      margin-top: 5px;
-      color: #64748b;
-      font-weight: 400;
-    }
-
-    .fw-submit-worker {
-      margin-top: 5px;
-    }
-
-    .fw-registration-modal input[type="file"] {
-      padding: 9px;
-      cursor: pointer;
-    }
   `;
 
   document.head.appendChild(style);
@@ -1352,10 +1102,11 @@ function injectWorkerRegistrationStyles() {
    INITIALIZE
 ========================= */
 
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener(
+  "DOMContentLoaded",
+  () => {
 
-  loadWorkers();
+    loadWorkers();
 
-  setupWorkerRegistrationButton();
-
-});
+  }
+);
