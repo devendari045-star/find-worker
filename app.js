@@ -10,7 +10,6 @@ const searchInput = document.querySelector(".search input");
 const categories = document.querySelectorAll(".category");
 const nearbySection = document.querySelector(".nearby");
 
-/* LOAD APPROVED WORKERS */
 
 async function loadWorkers() {
 
@@ -24,13 +23,13 @@ async function loadWorkers() {
     return;
   }
 
-  const oldWorkers = nearbySection.querySelectorAll(".worker");
-  oldWorkers.forEach(worker => worker.remove());
+  nearbySection.querySelectorAll(".worker").forEach(worker => {
+    worker.remove();
+  });
 
   data.forEach(worker => {
 
     const workerCard = document.createElement("div");
-
     workerCard.className = "worker";
 
     workerCard.innerHTML = `
@@ -39,15 +38,17 @@ async function loadWorkers() {
       </div>
 
       <div class="worker-info">
-        <h3>${worker.service}</h3>
+
+        <h3>${escapeHTML(worker.service)}</h3>
 
         <p>
-          ${worker.name} • ${worker.area}
+          ${escapeHTML(worker.name)} • ${escapeHTML(worker.area)}
         </p>
 
         <div class="rating">
           ⭐ Verified Provider
         </div>
+
       </div>
 
       <button class="view">
@@ -57,21 +58,107 @@ async function loadWorkers() {
 
     nearbySection.appendChild(workerCard);
 
-    const viewButton = workerCard.querySelector(".view");
+    workerCard.querySelector(".view").addEventListener("click", function() {
 
-    viewButton.addEventListener("click", function () {
-
-      alert(
-        "Worker: " + worker.name +
-        "\nService: " + worker.service +
-        "\nArea: " + worker.area +
-        "\nExperience: " + worker.experience +
-        "\nStarting charge: ₹" + worker.starting_charge +
-        "\nMobile: " + worker.mobile
-      );
+      showWorkerProfile(worker);
 
     });
 
+  });
+}
+
+
+/* WORKER PROFILE */
+
+function showWorkerProfile(worker) {
+
+  const oldProfile = document.querySelector(".worker-profile");
+
+  if (oldProfile) {
+    oldProfile.remove();
+  }
+
+  const profile = document.createElement("div");
+
+  profile.className = "worker-profile";
+
+  profile.innerHTML = `
+    <div class="profile-box">
+
+      <button class="close-profile">
+        ✕
+      </button>
+
+      <div class="profile-icon">
+        🔧
+      </div>
+
+      <h2>${escapeHTML(worker.name)}</h2>
+
+      <div class="verified">
+        ✓ Verified Provider
+      </div>
+
+      <div class="profile-details">
+
+        <p>
+          🔧 <strong>Service:</strong>
+          ${escapeHTML(worker.service)}
+        </p>
+
+        <p>
+          📍 <strong>Area:</strong>
+          ${escapeHTML(worker.area)}
+        </p>
+
+        <p>
+          🛠️ <strong>Experience:</strong>
+          ${escapeHTML(worker.experience)}
+        </p>
+
+        <p>
+          💰 <strong>Starting charge:</strong>
+          ₹${escapeHTML(String(worker.starting_charge))}
+        </p>
+
+        <p>
+          🕐 <strong>Availability:</strong>
+          ${escapeHTML(worker.availability)}
+        </p>
+
+        <p>
+          📝 <strong>About:</strong>
+          ${escapeHTML(worker.description)}
+        </p>
+
+      </div>
+
+      <div class="contact-buttons">
+
+        <a
+          class="call-button"
+          href="tel:${worker.mobile}"
+        >
+          📞 Call
+        </a>
+
+        <a
+          class="whatsapp-button"
+          href="https://wa.me/91${worker.mobile}"
+          target="_blank"
+        >
+          💬 WhatsApp
+        </a>
+
+      </div>
+
+    </div>
+  `;
+
+  document.body.appendChild(profile);
+
+  profile.querySelector(".close-profile").addEventListener("click", function() {
+    profile.remove();
   });
 
 }
@@ -79,11 +166,11 @@ async function loadWorkers() {
 
 /* SEARCH */
 
-searchInput.addEventListener("input", function () {
+searchInput.addEventListener("input", function() {
 
   const searchText = this.value.toLowerCase().trim();
 
-  categories.forEach(function (category) {
+  categories.forEach(function(category) {
 
     const serviceName =
       category.querySelector("span").textContent.toLowerCase();
@@ -95,9 +182,7 @@ searchInput.addEventListener("input", function () {
 
   });
 
-  const workers = document.querySelectorAll(".worker");
-
-  workers.forEach(function (worker) {
+  document.querySelectorAll(".worker").forEach(function(worker) {
 
     const workerText =
       worker.textContent.toLowerCase();
@@ -114,9 +199,9 @@ searchInput.addEventListener("input", function () {
 
 /* CATEGORY CLICK */
 
-categories.forEach(function (category) {
+categories.forEach(function(category) {
 
-  category.addEventListener("click", function () {
+  category.addEventListener("click", function() {
 
     const service =
       this.querySelector("span").textContent;
@@ -135,6 +220,20 @@ categories.forEach(function (category) {
 });
 
 
-/* LOAD DATA */
+/* SECURITY */
+
+function escapeHTML(value) {
+
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+
+}
+
+
+/* START */
 
 loadWorkers();
