@@ -1,14 +1,25 @@
-const SUPABASE_URL = "https://jprqqylhmwenshynrgtk.supabase.co";
-const SUPABASE_KEY = "sb_publishable_QL9UvmHtxzM9fvZAG8TFnw_UvpOEY3i";
+// ============================================================
+// FINDWORKER - APP.JS
+// Customer-side stable version
+// Search emoji fix included
+// ============================================================
 
-const supabaseClient = supabase.createClient(
+const SUPABASE_URL = "https://jprqqylhmwenshynrgtk.supabase.co";
+
+// IMPORTANT:
+// Apni existing Supabase publishable key yahin rakho.
+// Maine security ke liye key yahan repeat nahi ki hai.
+const SUPABASE_ANON_KEY = "sb_publishable_QL9UvmHtxzM9fvZAG8TFnw_UvpOEY3i";
+
+const supabaseClient = window.supabase.createClient(
   SUPABASE_URL,
-  SUPABASE_KEY
+  SUPABASE_ANON_KEY
 );
 
-/* =========================
-   SERVICES
-========================= */
+
+// ============================================================
+// SERVICES
+// ============================================================
 
 const ALL_SERVICES = [
   "Electrician",
@@ -18,33 +29,49 @@ const ALL_SERVICES = [
   "AC Repair",
   "Refrigerator Repair",
   "Washing Machine Repair",
-  "TV Repair",
   "RO Repair",
-  "Cleaning",
+  "TV Repair",
+  "Mobile Repair",
+  "Computer Repair",
+  "CCTV Installation",
   "Pest Control",
+  "Cleaning",
+  "Home Cleaning",
+  "Bathroom Cleaning",
+  "Kitchen Cleaning",
+  "Sofa Cleaning",
+  "Car Cleaning",
+  "Bike Repair",
+  "Car Repair",
+  "Mechanic",
+  "Mason",
+  "Welder",
   "Driver",
   "Cook",
   "Gardener",
-  "Mason",
-  "Welder",
-  "Mechanic",
-  "Computer Repair",
-  "Mobile Repair",
-  "CCTV Installation",
+  "Tailor",
+  "Beauty Parlour",
+  "Hairdresser",
+  "Makeup Artist",
+  "Tutor",
+  "Packers & Movers",
+  "Security Guard",
   "Other"
 ];
 
-/* =========================
-   DOM
-========================= */
+
+// ============================================================
+// DOM
+// ============================================================
 
 const serviceSearch = document.getElementById("service-search");
 const serviceSuggestions = document.getElementById("service-suggestions");
 const workerList = document.getElementById("worker-list");
 
-/* =========================
-   HELPERS
-========================= */
+
+// ============================================================
+// HELPERS
+// ============================================================
 
 function escapeHTML(value) {
   if (value === null || value === undefined) return "";
@@ -57,149 +84,187 @@ function escapeHTML(value) {
     .replace(/'/g, "&#039;");
 }
 
+
 function getServiceIcon(service) {
-  const s = String(service || "").toLowerCase();
+  const icons = {
+    "Electrician": "⚡",
+    "Plumber": "🔧",
+    "Carpenter": "🪚",
+    "Painter": "🎨",
+    "AC Repair": "❄️",
+    "Refrigerator Repair": "🧊",
+    "Washing Machine Repair": "🧺",
+    "RO Repair": "💧",
+    "TV Repair": "📺",
+    "Mobile Repair": "📱",
+    "Computer Repair": "💻",
+    "CCTV Installation": "📹",
+    "Pest Control": "🐜",
+    "Cleaning": "🧹",
+    "Home Cleaning": "🏠",
+    "Bathroom Cleaning": "🚿",
+    "Kitchen Cleaning": "🍳",
+    "Sofa Cleaning": "🛋️",
+    "Car Cleaning": "🚗",
+    "Bike Repair": "🏍️",
+    "Car Repair": "🚘",
+    "Mechanic": "🔩",
+    "Mason": "🧱",
+    "Welder": "🛠️",
+    "Driver": "🚕",
+    "Cook": "👨‍🍳",
+    "Gardener": "🌱",
+    "Tailor": "🧵",
+    "Beauty Parlour": "💄",
+    "Hairdresser": "💇",
+    "Makeup Artist": "💅",
+    "Tutor": "📚",
+    "Packers & Movers": "📦",
+    "Security Guard": "🛡️"
+  };
 
-  if (s.includes("electric")) return "⚡";
-  if (s.includes("plumb")) return "🔧";
-  if (s.includes("carpent")) return "🪚";
-  if (s.includes("paint")) return "🎨";
-  if (s.includes("ac")) return "❄️";
-  if (s.includes("refriger")) return "🧊";
-  if (s.includes("washing")) return "🧺";
-  if (s.includes("tv")) return "📺";
-  if (s.includes("ro")) return "💧";
-  if (s.includes("clean")) return "🧹";
-  if (s.includes("pest")) return "🐜";
-  if (s.includes("driver")) return "🚗";
-  if (s.includes("cook")) return "👨‍🍳";
-  if (s.includes("garden")) return "🌱";
-  if (s.includes("mason")) return "🧱";
-  if (s.includes("weld")) return "🔩";
-  if (s.includes("mechanic")) return "🔧";
-  if (s.includes("computer")) return "💻";
-  if (s.includes("mobile")) return "📱";
-  if (s.includes("cctv")) return "📹";
-
-  return "🛠️";
+  return icons[service] || "🛠️";
 }
+
 
 function getWorkerPhoto(worker) {
-  return worker["photo url"] || worker.photo_url || "";
+  const photo =
+    worker["photo url"] ??
+    worker.photo_url ??
+    worker.photo ??
+    "";
+
+  if (!photo) {
+    return "";
+  }
+
+  return String(photo).trim();
 }
 
-/* =========================
-   SERVICE SEARCH
-   FIXED:
-   NO EMOJI IN SEARCH SUGGESTIONS
-========================= */
 
-if (serviceSearch) {
-  serviceSearch.addEventListener("input", () => {
-
-    const value =
-      serviceSearch.value.trim().toLowerCase();
-
-    if (!serviceSuggestions) return;
-
-    if (!value) {
-      serviceSuggestions.innerHTML = "";
-      serviceSuggestions.style.display = "none";
-      return;
-    }
-
-    const matches = ALL_SERVICES
-      .filter(service =>
-        service.toLowerCase().includes(value)
-      )
-      .slice(0, 8);
-
-    if (!matches.length) {
-      serviceSuggestions.innerHTML = "";
-      serviceSuggestions.style.display = "none";
-      return;
-    }
-
-    /*
-      IMPORTANT:
-      No getServiceIcon() here.
-      Search suggestions will show ONLY service names.
-    */
-
-    serviceSuggestions.innerHTML = matches
-      .map(service => `
-        <div
-          class="service-suggestion-item"
-          data-service="${escapeHTML(service)}"
-        >
-          ${escapeHTML(service)}
-        </div>
-      `)
-      .join("");
-
-    serviceSuggestions.style.display = "block";
-
-    serviceSuggestions
-      .querySelectorAll(".service-suggestion-item")
-      .forEach(item => {
-
-        item.addEventListener("click", () => {
-
-          serviceSearch.value =
-            item.dataset.service;
-
-          serviceSuggestions.innerHTML = "";
-          serviceSuggestions.style.display = "none";
-
-          loadWorkers(item.dataset.service);
-        });
-
-      });
-  });
+function getStartingCharge(worker) {
+  return (
+    worker["starting charge"] ??
+    worker.starting_charge ??
+    ""
+  );
 }
 
-/* =========================
-   SEARCH ENTER
-========================= */
 
-if (serviceSearch) {
-  serviceSearch.addEventListener("keydown", event => {
+// ============================================================
+// SEARCH SUGGESTIONS
+// IMPORTANT: NO EMOJI HERE
+// ============================================================
 
-    if (event.key !== "Enter") return;
+function showServiceSuggestions(value) {
+  if (!serviceSuggestions) return;
 
-    event.preventDefault();
+  const searchValue = String(value || "").trim().toLowerCase();
 
-    const value =
-      serviceSearch.value.trim();
-
+  if (!searchValue) {
     serviceSuggestions.innerHTML = "";
     serviceSuggestions.style.display = "none";
+    return;
+  }
 
-    loadWorkers(value);
+  const matches = ALL_SERVICES.filter(service =>
+    service.toLowerCase().includes(searchValue)
+  ).slice(0, 8);
+
+  if (!matches.length) {
+    serviceSuggestions.innerHTML = "";
+    serviceSuggestions.style.display = "none";
+    return;
+  }
+
+  serviceSuggestions.innerHTML = matches
+    .map(service => `
+      <div
+        class="service-suggestion-item"
+        data-service="${escapeHTML(service)}"
+      >
+        ${escapeHTML(service)}
+      </div>
+    `)
+    .join("");
+
+  serviceSuggestions.style.display = "block";
+
+  serviceSuggestions
+    .querySelectorAll(".service-suggestion-item")
+    .forEach(item => {
+      item.addEventListener("click", () => {
+        const service = item.dataset.service;
+
+        if (serviceSearch) {
+          serviceSearch.value = service;
+        }
+
+        serviceSuggestions.innerHTML = "";
+        serviceSuggestions.style.display = "none";
+
+        loadWorkers(service);
+      });
+    });
+}
+
+
+// ============================================================
+// SEARCH EVENTS
+// ============================================================
+
+if (serviceSearch) {
+
+  serviceSearch.addEventListener("input", () => {
+    showServiceSuggestions(serviceSearch.value);
+
+    const value = serviceSearch.value.trim();
+
+    if (!value) {
+      loadWorkers();
+    }
+  });
+
+
+  serviceSearch.addEventListener("keydown", event => {
+    if (event.key === "Enter") {
+      event.preventDefault();
+
+      const value = serviceSearch.value.trim();
+
+      if (serviceSuggestions) {
+        serviceSuggestions.innerHTML = "";
+        serviceSuggestions.style.display = "none";
+      }
+
+      if (value) {
+        loadWorkers(value);
+      } else {
+        loadWorkers();
+      }
+    }
   });
 }
 
-/* =========================
-   CLICK OUTSIDE SEARCH
-========================= */
+
+// Close suggestions when clicking outside
 
 document.addEventListener("click", event => {
-
   if (!serviceSearch || !serviceSuggestions) return;
 
   if (
-    event.target !== serviceSearch &&
+    !serviceSearch.contains(event.target) &&
     !serviceSuggestions.contains(event.target)
   ) {
     serviceSuggestions.innerHTML = "";
     serviceSuggestions.style.display = "none";
   }
-
 });
 
-/* =========================
-   LOAD APPROVED WORKERS
-========================= */
+
+// ============================================================
+// LOAD WORKERS
+// ============================================================
 
 async function loadWorkers(serviceFilter = "") {
 
@@ -218,30 +283,31 @@ async function loadWorkers(serviceFilter = "") {
       .select("*")
       .eq("verification_status", "approved");
 
-    if (
-      serviceFilter &&
-      serviceFilter.trim()
-    ) {
+    if (serviceFilter && serviceFilter.trim()) {
       query = query.ilike(
         "service",
         `%${serviceFilter.trim()}%`
       );
     }
 
-    const {
-      data,
-      error
-    } = await query;
+    const { data, error } = await query;
 
-    if (error) throw error;
-
-    if (!data || data.length === 0) {
+    if (error) {
+      console.error("Workers load error:", error);
 
       workerList.innerHTML = `
         <div class="no-workers">
-          <div style="font-size:42px;">🔍</div>
-          <h3>No workers found</h3>
-          <p>Try another service or area.</p>
+          Unable to load workers right now.
+        </div>
+      `;
+
+      return;
+    }
+
+    if (!data || data.length === 0) {
+      workerList.innerHTML = `
+        <div class="no-workers">
+          No workers found for this service.
         </div>
       `;
 
@@ -249,339 +315,294 @@ async function loadWorkers(serviceFilter = "") {
     }
 
     workerList.innerHTML = data
-      .map(worker =>
-        createWorkerCard(worker)
-      )
+      .map(worker => createWorkerCard(worker))
       .join("");
 
     workerList
       .querySelectorAll("[data-worker-id]")
       .forEach(card => {
+        card.addEventListener("click", event => {
 
-        card.addEventListener(
-          "click",
-          () => {
-
-            const id =
-              Number(card.dataset.workerId);
-
-            const worker =
-              data.find(
-                item =>
-                  Number(item.id) === id
-              );
-
-            if (worker) {
-              openWorkerProfile(worker);
-            }
-
+          if (
+            event.target.closest(".worker-action-btn") ||
+            event.target.closest("button") ||
+            event.target.closest("a")
+          ) {
+            return;
           }
-        );
 
+          const workerId = card.dataset.workerId;
+
+          const worker = data.find(
+            item => String(item.id) === String(workerId)
+          );
+
+          if (worker) {
+            openWorkerProfile(worker);
+          }
+        });
       });
+
+    setupWorkerButtons(data);
 
   } catch (error) {
 
-    console.error(
-      "Worker loading error:",
-      error
-    );
+    console.error("Unexpected worker error:", error);
 
     workerList.innerHTML = `
       <div class="no-workers">
-        <div style="font-size:42px;">⚠️</div>
-        <h3>Something went wrong</h3>
-        <p>Please try again.</p>
+        Something went wrong. Please try again.
       </div>
     `;
   }
 }
 
-/* =========================
-   WORKER CARD
-========================= */
+
+// ============================================================
+// WORKER CARD
+// ============================================================
 
 function createWorkerCard(worker) {
 
-  const photo =
-    getWorkerPhoto(worker);
+  const photo = getWorkerPhoto(worker);
+  const charge = getStartingCharge(worker);
 
-  const startingCharge =
-    worker["starting charge"] ??
-    worker.starting_charge ??
-    "";
+  const name = escapeHTML(worker.name || "Worker");
+  const service = escapeHTML(worker.service || "Service");
+  const area = escapeHTML(worker.area || "Area");
+  const experience = escapeHTML(worker.experience || "0");
 
-  const experience =
-    worker.experience ?? "";
-
-  const availability =
-    worker.availability ?? "";
-
-  const area =
-    worker.area ?? "";
+  const imageHTML = photo
+    ? `
+      <img
+        src="${escapeHTML(photo)}"
+        alt="${name}"
+        class="worker-photo"
+        loading="lazy"
+        onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
+      >
+      <div class="worker-photo-placeholder" style="display:none;">
+        ${getServiceIcon(worker.service)}
+      </div>
+    `
+    : `
+      <div class="worker-photo-placeholder">
+        ${getServiceIcon(worker.service)}
+      </div>
+    `;
 
   return `
     <div
       class="worker-card"
-      data-worker-id="${Number(worker.id)}"
+      data-worker-id="${escapeHTML(worker.id)}"
     >
 
-      <div class="worker-photo">
-
-        ${
-          photo
-            ? `
-              <img
-                src="${escapeHTML(photo)}"
-                alt="${escapeHTML(worker.name)}"
-              >
-            `
-            : `
-              <div class="worker-photo-placeholder">
-                ${getServiceIcon(worker.service)}
-              </div>
-            `
-        }
-
+      <div class="worker-photo-wrap">
+        ${imageHTML}
       </div>
 
-      <div class="worker-card-content">
+      <div class="worker-info">
 
-        <h3>
-          ${escapeHTML(
-            worker.name || "Worker"
-          )}
-        </h3>
+        <div class="worker-name">
+          ${name}
+        </div>
 
         <div class="worker-service">
           ${getServiceIcon(worker.service)}
-          ${escapeHTML(
-            worker.service || "Service"
-          )}
+          ${service}
         </div>
 
         <div class="worker-meta">
-          <span>
-            📍
-            ${escapeHTML(
-              area || "Area not specified"
-            )}
-          </span>
-        </div>
-
-        <div class="worker-meta">
-          <span>
-            💼
-            ${escapeHTML(
-              experience ||
-              "Experience not specified"
-            )}
-            years
-          </span>
+          <span>📍 ${area}</span>
+          <span>💼 ${experience} yrs</span>
         </div>
 
         ${
-          startingCharge
+          charge !== "" &&
+          charge !== null &&
+          charge !== undefined
             ? `
               <div class="worker-charge">
-                Starting ₹${escapeHTML(
-                  startingCharge
-                )}
+                Starting ₹${escapeHTML(charge)}
               </div>
             `
             : ""
         }
 
-        ${
-          availability
-            ? `
-              <div class="worker-availability">
-                ${escapeHTML(
-                  availability
-                )}
-              </div>
-            `
-            : ""
-        }
+        <div class="worker-buttons">
+
+          <button
+            class="worker-action-btn view-profile-btn"
+            data-worker-id="${escapeHTML(worker.id)}"
+          >
+            View Profile
+          </button>
+
+        </div>
 
       </div>
-
     </div>
   `;
 }
 
-/* =========================
-   WORKER PROFILE
-========================= */
+
+// ============================================================
+// BUTTON EVENTS
+// ============================================================
+
+function setupWorkerButtons(workers) {
+
+  document
+    .querySelectorAll(".view-profile-btn")
+    .forEach(button => {
+
+      button.addEventListener("click", event => {
+
+        event.stopPropagation();
+
+        const workerId = button.dataset.workerId;
+
+        const worker = workers.find(
+          item => String(item.id) === String(workerId)
+        );
+
+        if (worker) {
+          openWorkerProfile(worker);
+        }
+      });
+    });
+}
+
+
+// ============================================================
+// WORKER PROFILE
+// ============================================================
 
 function openWorkerProfile(worker) {
 
-  closeAllModals();
+  const oldModal = document.getElementById("worker-profile-modal");
 
-  const photo =
-    getWorkerPhoto(worker);
+  if (oldModal) {
+    oldModal.remove();
+  }
 
-  const startingCharge =
-    worker["starting charge"] ??
-    worker.starting_charge ??
-    "";
+  const photo = getWorkerPhoto(worker);
+  const charge = getStartingCharge(worker);
 
-  const modal =
-    document.createElement("div");
+  const name = escapeHTML(worker.name || "Worker");
+  const service = escapeHTML(worker.service || "Service");
+  const area = escapeHTML(worker.area || "Area");
+  const experience = escapeHTML(worker.experience || "0");
+  const description = escapeHTML(
+    worker.description || "No description available."
+  );
+  const mobile = String(worker.mobile || "").trim();
 
-  modal.className =
-    "fw-modal-overlay";
+  const photoHTML = photo
+    ? `
+      <img
+        src="${escapeHTML(photo)}"
+        alt="${name}"
+        class="profile-photo"
+      >
+    `
+    : `
+      <div class="profile-photo-placeholder">
+        ${getServiceIcon(worker.service)}
+      </div>
+    `;
 
-  modal.id =
-    "worker-profile-modal";
+  const modal = document.createElement("div");
+
+  modal.id = "worker-profile-modal";
 
   modal.innerHTML = `
-    <div class="fw-modal">
+    <div class="profile-modal-overlay">
 
-      <button
-        class="fw-modal-close"
-        id="close-worker-profile"
-      >
-        ×
-      </button>
-
-      <div class="fw-profile-header">
-
-        <div class="fw-profile-photo">
-
-          ${
-            photo
-              ? `
-                <img
-                  src="${escapeHTML(photo)}"
-                  alt="${escapeHTML(worker.name)}"
-                >
-              `
-              : `
-                <div class="worker-photo-placeholder">
-                  ${getServiceIcon(worker.service)}
-                </div>
-              `
-          }
-
-        </div>
-
-        <h2>
-          ${escapeHTML(
-            worker.name || "Worker"
-          )}
-        </h2>
-
-        <div class="fw-profile-service">
-          ${getServiceIcon(worker.service)}
-          ${escapeHTML(
-            worker.service || ""
-          )}
-        </div>
-
-      </div>
-
-      <div class="fw-profile-details">
-
-        <div>
-          <strong>📍 Area</strong>
-          <span>
-            ${escapeHTML(
-              worker.area ||
-              "Not specified"
-            )}
-          </span>
-        </div>
-
-        <div>
-          <strong>💼 Experience</strong>
-          <span>
-            ${escapeHTML(
-              worker.experience || "0"
-            )}
-            years
-          </span>
-        </div>
-
-        ${
-          startingCharge
-            ? `
-              <div>
-                <strong>
-                  💰 Starting Charge
-                </strong>
-
-                <span>
-                  ₹${escapeHTML(
-                    startingCharge
-                  )}
-                </span>
-              </div>
-            `
-            : ""
-        }
-
-        <div>
-          <strong>
-            🕒 Availability
-          </strong>
-
-          <span>
-            ${escapeHTML(
-              worker.availability ||
-              "Not specified"
-            )}
-          </span>
-        </div>
-
-        ${
-          worker.description
-            ? `
-              <div>
-                <strong>
-                  📝 About
-                </strong>
-
-                <span>
-                  ${escapeHTML(
-                    worker.description
-                  )}
-                </span>
-              </div>
-            `
-            : ""
-        }
-
-      </div>
-
-      <div class="fw-profile-actions">
-
-        <a
-          class="fw-action-call"
-          href="tel:${escapeHTML(
-            worker.mobile || ""
-          )}"
-        >
-          📞 Call
-        </a>
-
-        <a
-          class="fw-action-whatsapp"
-          href="https://wa.me/${formatWhatsAppNumber(
-            worker.mobile
-          )}"
-          target="_blank"
-          rel="noopener"
-        >
-          💬 WhatsApp
-        </a>
+      <div class="profile-modal">
 
         <button
-          class="fw-action-request"
-          id="request-service-btn"
+          class="profile-close-btn"
+          type="button"
         >
-          🛠️ Request Service
+          ×
         </button>
+
+        <div class="profile-photo-container">
+          ${photoHTML}
+        </div>
+
+        <h2>${name}</h2>
+
+        <div class="profile-service">
+          ${getServiceIcon(worker.service)}
+          ${service}
+        </div>
+
+        <div class="profile-details">
+
+          <div>
+            <strong>📍 Area</strong>
+            <span>${area}</span>
+          </div>
+
+          <div>
+            <strong>💼 Experience</strong>
+            <span>${experience} years</span>
+          </div>
+
+          ${
+            charge !== "" &&
+            charge !== null &&
+            charge !== undefined
+              ? `
+                <div>
+                  <strong>💰 Starting Charge</strong>
+                  <span>₹${escapeHTML(charge)}</span>
+                </div>
+              `
+              : ""
+          }
+
+          <div>
+            <strong>📝 About</strong>
+            <span>${description}</span>
+          </div>
+
+        </div>
+
+        <div class="profile-actions">
+
+          ${
+            mobile
+              ? `
+                <a
+                  class="profile-call-btn"
+                  href="tel:${escapeHTML(mobile)}"
+                >
+                  📞 Call
+                </a>
+
+                <a
+                  class="profile-whatsapp-btn"
+                  href="https://wa.me/91${mobile.replace(/\D/g, "")}"
+                  target="_blank"
+                  rel="noopener"
+                >
+                  💬 WhatsApp
+                </a>
+              `
+              : ""
+          }
+
+          <button
+            class="profile-request-btn"
+            type="button"
+          >
+            Request Service
+          </button>
+
+        </div>
 
       </div>
 
@@ -590,115 +611,75 @@ function openWorkerProfile(worker) {
 
   document.body.appendChild(modal);
 
-  document
-    .getElementById(
-      "close-worker-profile"
-    )
-    .addEventListener(
-      "click",
-      () => modal.remove()
-    );
+  modal
+    .querySelector(".profile-close-btn")
+    .addEventListener("click", () => {
+      modal.remove();
+    });
 
-  modal.addEventListener(
-    "click",
-    event => {
-
-      if (event.target === modal) {
+  modal
+    .querySelector(".profile-modal-overlay")
+    .addEventListener("click", event => {
+      if (event.target.classList.contains("profile-modal-overlay")) {
         modal.remove();
       }
+    });
 
-    }
+  modal
+    .querySelector(".profile-request-btn")
+    .addEventListener("click", () => {
+
+      modal.remove();
+
+      openRequestService(worker);
+    });
+}
+
+
+// ============================================================
+// REQUEST SERVICE
+// ============================================================
+
+function openRequestService(worker) {
+
+  const oldModal = document.getElementById(
+    "request-service-modal"
   );
 
-  document
-    .getElementById(
-      "request-service-btn"
-    )
-    .addEventListener(
-      "click",
-      () => {
-
-        modal.remove();
-
-        openRequestServiceModal(
-          worker
-        );
-
-      }
-    );
-}
-
-/* =========================
-   WHATSAPP NUMBER
-========================= */
-
-function formatWhatsAppNumber(number) {
-
-  let value =
-    String(number || "")
-      .replace(/\D/g, "");
-
-  if (value.length === 10) {
-    value = "91" + value;
+  if (oldModal) {
+    oldModal.remove();
   }
 
-  return value;
-}
+  const modal = document.createElement("div");
 
-/* =========================
-   REQUEST SERVICE MODAL
-========================= */
-
-function openRequestServiceModal(worker) {
-
-  closeAllModals();
-
-  injectRequestModalStyles();
-
-  const modal =
-    document.createElement("div");
-
-  modal.className =
-    "fw-modal-overlay";
-
-  modal.id =
-    "request-service-modal";
+  modal.id = "request-service-modal";
 
   modal.innerHTML = `
-    <div class="fw-modal fw-request-modal">
+    <div class="request-modal-overlay">
 
-      <button
-        class="fw-modal-close"
-        id="close-request-modal"
-      >
-        ×
-      </button>
+      <div class="request-modal">
 
-      <div class="fw-request-header">
+        <button
+          class="request-close-btn"
+          type="button"
+        >
+          ×
+        </button>
 
-        <div class="fw-request-icon">
-          🛠️
-        </div>
+        <h2>Request Service</h2>
 
-        <h2>
-          Request Service
-        </h2>
-
-        <p>
-          Send your service request directly to
+        <p class="request-worker-name">
+          Requesting:
           <strong>
-            ${escapeHTML(
-              worker.name
-            )}
+            ${escapeHTML(worker.name || "Worker")}
           </strong>
         </p>
 
-      </div>
+        <form id="request-service-form">
 
-      <form id="request-service-form">
-
-        <label>
-          Your Name
+          <label>
+            Your Name
+          </label>
 
           <input
             type="text"
@@ -706,34 +687,31 @@ function openRequestServiceModal(worker) {
             required
             placeholder="Enter your name"
           >
-        </label>
 
-        <label>
-          Mobile Number
+          <label>
+            Mobile Number
+          </label>
 
           <input
             type="tel"
             id="customer-mobile"
             required
-            maxlength="10"
-            placeholder="Enter 10 digit mobile number"
+            placeholder="Enter mobile number"
           >
-        </label>
 
-        <label>
-          Service
+          <label>
+            Service
+          </label>
 
           <input
             type="text"
-            value="${escapeHTML(
-              worker.service || ""
-            )}"
+            value="${escapeHTML(worker.service || "")}"
             readonly
           >
-        </label>
 
-        <label>
-          Your Area
+          <label>
+            Your Area
+          </label>
 
           <input
             type="text"
@@ -741,372 +719,400 @@ function openRequestServiceModal(worker) {
             required
             placeholder="Enter your area"
           >
-        </label>
 
-        <label>
-          Request Details
+          <label>
+            Request Details
+          </label>
 
           <textarea
             id="request-details"
-            placeholder="Describe what you need..."
+            placeholder="Tell the worker what you need..."
           ></textarea>
-        </label>
 
-        <button
-          type="submit"
-          class="fw-submit-request"
-        >
-          Send Request
-        </button>
+          <button
+            type="submit"
+            class="submit-request-btn"
+          >
+            Send Request
+          </button>
 
-        <div
-          id="request-form-message"
-        ></div>
+          <div
+            id="request-status"
+            class="request-status"
+          ></div>
 
-      </form>
+        </form>
+
+      </div>
 
     </div>
   `;
 
   document.body.appendChild(modal);
 
-  document
-    .getElementById(
-      "close-request-modal"
-    )
-    .addEventListener(
-      "click",
-      () => modal.remove()
-    );
+  modal
+    .querySelector(".request-close-btn")
+    .addEventListener("click", () => {
+      modal.remove();
+    });
 
-  modal.addEventListener(
-    "click",
-    event => {
-
-      if (event.target === modal) {
+  modal
+    .querySelector(".request-modal-overlay")
+    .addEventListener("click", event => {
+      if (event.target.classList.contains("request-modal-overlay")) {
         modal.remove();
       }
+    });
 
+  const form = modal.querySelector("#request-service-form");
+
+  form.addEventListener("submit", async event => {
+
+    event.preventDefault();
+
+    const customerName =
+      document.getElementById("customer-name").value.trim();
+
+    const customerMobile =
+      document.getElementById("customer-mobile").value.trim();
+
+    const customerArea =
+      document.getElementById("customer-area").value.trim();
+
+    const requestDetails =
+      document.getElementById("request-details").value.trim();
+
+    const statusBox =
+      document.getElementById("request-status");
+
+    const submitButton =
+      form.querySelector(".submit-request-btn");
+
+    if (!customerName || !customerMobile || !customerArea) {
+      statusBox.textContent =
+        "Please fill all required fields.";
+
+      return;
     }
-  );
 
-  document
-    .getElementById(
-      "request-service-form"
-    )
-    .addEventListener(
-      "submit",
-      event => {
-        submitServiceRequest(
-          event,
-          worker
-        );
-      }
-    );
-}
+    submitButton.disabled = true;
+    submitButton.textContent = "Sending...";
 
-/* =========================
-   SUBMIT REQUEST
-========================= */
+    statusBox.textContent = "";
 
-async function submitServiceRequest(
-  event,
-  worker
-) {
+    try {
 
-  event.preventDefault();
-
-  const message =
-    document.getElementById(
-      "request-form-message"
-    );
-
-  const submitButton =
-    event.target.querySelector(
-      "button[type='submit']"
-    );
-
-  const customerName =
-    document
-      .getElementById("customer-name")
-      .value
-      .trim();
-
-  const customerMobile =
-    document
-      .getElementById("customer-mobile")
-      .value
-      .trim();
-
-  const customerArea =
-    document
-      .getElementById("customer-area")
-      .value
-      .trim();
-
-  const requestDetails =
-    document
-      .getElementById("request-details")
-      .value
-      .trim();
-
-  if (!/^\d{10}$/.test(
-    customerMobile
-  )) {
-
-    message.innerHTML = `
-      <div class="fw-error-message">
-        Please enter a valid
-        10 digit mobile number.
-      </div>
-    `;
-
-    return;
-  }
-
-  submitButton.disabled = true;
-  submitButton.textContent =
-    "Sending...";
-
-  try {
-
-    const { error } =
-      await supabaseClient
+      const { error } = await supabaseClient
         .from("service_requests")
-        .insert({
-          worker_id: worker.id,
-          customer_name: customerName,
-          customer_mobile: customerMobile,
-          service: worker.service,
-          area: customerArea,
-          request_details: requestDetails,
-          status: "pending"
-        });
+        .insert([
+          {
+            worker_id: worker.id,
+            customer_name: customerName,
+            customer_mobile: customerMobile,
+            service: worker.service,
+            area: customerArea,
+            request_details: requestDetails,
+            status: "pending"
+          }
+        ]);
 
-    if (error) throw error;
+      if (error) {
+        console.error("Request insert error:", error);
 
-    message.innerHTML = `
-      <div class="fw-success-message">
-        ✅ Request sent successfully!
-        <br>
-        ${escapeHTML(
-          worker.name
-        )}
-        will receive your service request.
-      </div>
-    `;
+        statusBox.textContent =
+          "Request send nahi ho paayi. Please try again.";
 
-    event.target.reset();
+        submitButton.disabled = false;
+        submitButton.textContent = "Send Request";
 
-    setTimeout(() => {
-
-      const modal =
-        document.getElementById(
-          "request-service-modal"
-        );
-
-      if (modal) {
-        modal.remove();
+        return;
       }
 
-    }, 2200);
+      statusBox.textContent =
+        "Request sent successfully!";
 
-  } catch (error) {
+      statusBox.classList.add("success");
 
-    console.error(
-      "Request error:",
-      error
-    );
+      submitButton.textContent = "Request Sent";
 
-    message.innerHTML = `
-      <div class="fw-error-message">
-        ❌ Unable to send request.
-        Please try again.
-      </div>
-    `;
+      setTimeout(() => {
+        modal.remove();
+      }, 1500);
 
-    submitButton.disabled = false;
+    } catch (error) {
 
-    submitButton.textContent =
-      "Send Request";
-  }
+      console.error(error);
+
+      statusBox.textContent =
+        "Something went wrong. Please try again.";
+
+      submitButton.disabled = false;
+      submitButton.textContent = "Send Request";
+    }
+  });
 }
 
-/* =========================
-   CLOSE MODALS
-========================= */
 
-function closeAllModals() {
+// ============================================================
+// REQUEST SERVICE CSS
+// Only styles dynamically required by request/profile modals.
+// Existing style.css is not changed.
+// ============================================================
 
-  document
-    .querySelectorAll(
-      ".fw-modal-overlay"
-    )
-    .forEach(modal =>
-      modal.remove()
-    );
-}
+(function injectModalStyles() {
 
-/* =========================
-   REQUEST MODAL CSS
-========================= */
-
-function injectRequestModalStyles() {
-
-  if (
-    document.getElementById(
-      "fw-request-styles"
-    )
-  ) {
+  if (document.getElementById("findworker-modal-styles")) {
     return;
   }
 
-  const style =
-    document.createElement("style");
+  const style = document.createElement("style");
 
-  style.id =
-    "fw-request-styles";
+  style.id = "findworker-modal-styles";
 
   style.textContent = `
 
-    .fw-modal-overlay {
+    .profile-modal-overlay,
+    .request-modal-overlay {
       position: fixed;
       inset: 0;
       background: rgba(0,0,0,.55);
       display: flex;
       align-items: center;
       justify-content: center;
+      padding: 20px;
       z-index: 99999;
-      padding: 18px;
     }
 
-    .fw-modal {
-      width: min(520px, 100%);
-      max-height: 92vh;
+    .profile-modal,
+    .request-modal {
+      width: 100%;
+      max-width: 460px;
+      max-height: 90vh;
       overflow-y: auto;
       background: #fff;
       border-radius: 22px;
       padding: 24px;
       position: relative;
+      box-sizing: border-box;
       box-shadow: 0 20px 60px rgba(0,0,0,.25);
     }
 
-    .fw-modal-close {
+    .profile-close-btn,
+    .request-close-btn {
       position: absolute;
-      right: 15px;
+      right: 14px;
       top: 12px;
       width: 36px;
       height: 36px;
       border: 0;
       border-radius: 50%;
-      background: #f1f5f9;
-      font-size: 25px;
+      background: #f2f4f7;
+      font-size: 24px;
       cursor: pointer;
+      z-index: 2;
     }
 
-    .fw-request-header {
-      text-align: center;
-      margin-bottom: 20px;
+    .profile-photo-container {
+      width: 120px;
+      height: 120px;
+      margin: 5px auto 16px;
+      border-radius: 50%;
+      overflow: hidden;
+      background: #eef3f8;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
-    .fw-request-icon {
-      font-size: 42px;
-      margin-bottom: 5px;
-    }
-
-    .fw-request-header h2 {
-      margin: 5px 0;
-    }
-
-    .fw-request-header p {
-      color: #64748b;
-      font-size: 14px;
-    }
-
-    .fw-request-modal label {
+    .profile-photo {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
       display: block;
-      margin-bottom: 14px;
-      font-weight: 600;
-      color: #334155;
     }
 
-    .fw-request-modal input,
-    .fw-request-modal textarea {
+    .profile-photo-placeholder,
+    .worker-photo-placeholder {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 38px;
+      background: #eef3f8;
+    }
+
+    .profile-modal h2 {
+      text-align: center;
+      margin: 0 0 6px;
+    }
+
+    .profile-service {
+      text-align: center;
+      font-weight: 600;
+      margin-bottom: 18px;
+    }
+
+    .profile-details {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .profile-details > div {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      padding: 10px 12px;
+      border-radius: 12px;
+      background: #f7f9fb;
+    }
+
+    .profile-details strong {
+      font-size: 13px;
+    }
+
+    .profile-details span {
+      font-size: 14px;
+      line-height: 1.4;
+    }
+
+    .profile-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 9px;
+      margin-top: 18px;
+    }
+
+    .profile-actions a,
+    .profile-request-btn {
+      flex: 1;
+      min-width: 110px;
+      border: 0;
+      border-radius: 12px;
+      padding: 12px 10px;
+      text-align: center;
+      text-decoration: none;
+      cursor: pointer;
+      font-weight: 600;
+      box-sizing: border-box;
+    }
+
+    .profile-call-btn {
+      background: #edf7ef;
+      color: #16833b;
+    }
+
+    .profile-whatsapp-btn {
+      background: #eaf8ef;
+      color: #128c45;
+    }
+
+    .profile-request-btn {
+      background: #1769e0;
+      color: white;
+    }
+
+    .request-modal h2 {
+      margin: 0 0 8px;
+    }
+
+    .request-worker-name {
+      margin: 0 0 18px;
+      color: #555;
+    }
+
+    #request-service-form {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    #request-service-form label {
+      font-size: 14px;
+      font-weight: 600;
+      margin-top: 6px;
+    }
+
+    #request-service-form input,
+    #request-service-form textarea {
       width: 100%;
       box-sizing: border-box;
-      margin-top: 6px;
-      padding: 12px 13px;
-      border: 1px solid #dbe2ea;
-      border-radius: 12px;
+      border: 1px solid #d7dde5;
+      border-radius: 10px;
+      padding: 12px;
+      font-size: 14px;
       outline: none;
-      font: inherit;
-      background: #fff;
+      font-family: inherit;
     }
 
-    .fw-request-modal input:focus,
-    .fw-request-modal textarea:focus {
-      border-color: #2563eb;
-      box-shadow:
-        0 0 0 3px
-        rgba(37,99,235,.1);
+    #request-service-form input:focus,
+    #request-service-form textarea:focus {
+      border-color: #1769e0;
     }
 
-    .fw-request-modal textarea {
+    #request-service-form textarea {
       min-height: 90px;
       resize: vertical;
     }
 
-    .fw-submit-request {
-      width: 100%;
+    .submit-request-btn {
+      margin-top: 10px;
       border: 0;
-      border-radius: 13px;
+      border-radius: 12px;
       padding: 13px;
-      background: #2563eb;
+      background: #1769e0;
       color: white;
       font-weight: 700;
-      font-size: 15px;
       cursor: pointer;
     }
 
-    .fw-submit-request:disabled {
+    .submit-request-btn:disabled {
       opacity: .65;
       cursor: not-allowed;
     }
 
-    .fw-success-message {
-      margin-top: 15px;
-      padding: 13px;
-      border-radius: 12px;
-      background: #ecfdf5;
-      color: #047857;
+    .request-status {
+      min-height: 20px;
       text-align: center;
       font-size: 14px;
+      margin-top: 5px;
     }
 
-    .fw-error-message {
-      margin-top: 15px;
-      padding: 13px;
-      border-radius: 12px;
-      background: #fef2f2;
-      color: #b91c1c;
-      text-align: center;
-      font-size: 14px;
+    .request-status.success {
+      color: #16833b;
+      font-weight: 600;
+    }
+
+    @media (max-width: 480px) {
+
+      .profile-modal,
+      .request-modal {
+        padding: 20px 16px;
+        border-radius: 18px;
+      }
+
+      .profile-actions {
+        flex-direction: column;
+      }
+
+      .profile-actions a,
+      .profile-request-btn {
+        width: 100%;
+      }
     }
 
   `;
 
   document.head.appendChild(style);
-}
 
-/* =========================
-   INITIALIZE
-========================= */
+})();
 
-document.addEventListener(
-  "DOMContentLoaded",
-  () => {
 
-    loadWorkers();
+// ============================================================
+// INITIAL LOAD
+// ============================================================
 
-  }
-);
+document.addEventListener("DOMContentLoaded", () => {
+  loadWorkers();
+});
