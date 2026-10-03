@@ -20,6 +20,7 @@
       <div class="header-top">
 
         <div>
+
           <div class="logo">
             Find<span>Worker</span>
           </div>
@@ -27,7 +28,9 @@
           <div class="tagline">
             Find trusted workers near you
           </div>
+
         </div>
+
 
         <div class="header-badge">
           <span class="live-dot"></span>
@@ -40,12 +43,16 @@
       <!-- SEARCH -->
       <div class="search">
 
-        <span class="search-icon">⌕</span>
+        <span class="search-icon">
+          ⌕
+        </span>
 
         <input
           type="text"
           placeholder="What service do you need?"
           autocomplete="off"
+          id="service-search"
+          aria-label="Search services"
         >
 
         <span class="search-shortcut">
@@ -54,11 +61,19 @@
 
       </div>
 
+
+      <!-- ALL SERVICE SEARCH RESULTS -->
+      <div
+        class="service-suggestions"
+        id="service-suggestions"
+      ></div>
+
     </header>
 
 
     <!-- CONTENT -->
     <main class="content">
+
 
       <!-- CATEGORIES -->
       <section>
@@ -66,6 +81,7 @@
         <div class="section-heading">
 
           <div>
+
             <div class="eyebrow">
               EXPLORE SERVICES
             </div>
@@ -73,61 +89,164 @@
             <div class="title">
               What do you need?
             </div>
+
           </div>
 
+
           <div class="service-count">
-            9 services
+            9 popular
           </div>
 
         </div>
 
 
+        <!-- POPULAR SERVICES -->
         <div class="categories">
 
-          <div class="category" data-service="Electrician">
-            <div class="icon">🔧</div>
-            <span>Electrician</span>
+
+          <div
+            class="category"
+            data-service="Electrician"
+          >
+
+            <div class="icon">
+              🔧
+            </div>
+
+            <span>
+              Electrician
+            </span>
+
           </div>
 
-          <div class="category" data-service="Plumber">
-            <div class="icon">🚰</div>
-            <span>Plumber</span>
+
+          <div
+            class="category"
+            data-service="Plumber"
+          >
+
+            <div class="icon">
+              🚰
+            </div>
+
+            <span>
+              Plumber
+            </span>
+
           </div>
 
-          <div class="category" data-service="AC Repair">
-            <div class="icon">❄️</div>
-            <span>AC Repair</span>
+
+          <div
+            class="category"
+            data-service="AC Repair"
+          >
+
+            <div class="icon">
+              ❄️
+            </div>
+
+            <span>
+              AC Repair
+            </span>
+
           </div>
 
-          <div class="category" data-service="Carpenter">
-            <div class="icon">🪚</div>
-            <span>Carpenter</span>
+
+          <div
+            class="category"
+            data-service="Carpenter"
+          >
+
+            <div class="icon">
+              🪚
+            </div>
+
+            <span>
+              Carpenter
+            </span>
+
           </div>
 
-          <div class="category" data-service="Painter">
-            <div class="icon">🎨</div>
-            <span>Painter</span>
+
+          <div
+            class="category"
+            data-service="Painter"
+          >
+
+            <div class="icon">
+              🎨
+            </div>
+
+            <span>
+              Painter
+            </span>
+
           </div>
 
-          <div class="category" data-service="Cleaner">
-            <div class="icon">🧹</div>
-            <span>Cleaner</span>
+
+          <div
+            class="category"
+            data-service="Cleaner"
+          >
+
+            <div class="icon">
+              🧹
+            </div>
+
+            <span>
+              Cleaner
+            </span>
+
           </div>
 
-          <div class="category" data-service="Mobile Repair">
-            <div class="icon">📱</div>
-            <span>Mobile Repair</span>
+
+          <div
+            class="category"
+            data-service="Mobile Repair"
+          >
+
+            <div class="icon">
+              📱
+            </div>
+
+            <span>
+              Mobile Repair
+            </span>
+
           </div>
 
-          <div class="category" data-service="Computer">
-            <div class="icon">💻</div>
-            <span>Computer</span>
+
+          <div
+            class="category"
+            data-service="Computer"
+          >
+
+            <div class="icon">
+              💻
+            </div>
+
+            <span>
+              Computer
+            </span>
+
           </div>
 
-          <div class="category" data-service="Mechanic">
-            <div class="icon">🚗</div>
-            <span>Mechanic</span>
+
+          <div
+            class="category"
+            data-service="Mechanic"
+          >
+
+            <div class="icon">
+              🚗
+            </div>
+
+            <span>
+              Mechanic
+            </span>
+
           </div>
+
 
         </div>
 
@@ -137,9 +256,11 @@
       <!-- WORKERS -->
       <section class="nearby">
 
+
         <div class="section-heading worker-heading">
 
           <div>
+
             <div class="eyebrow">
               VERIFIED PROFESSIONALS
             </div>
@@ -147,7 +268,9 @@
             <div class="title">
               Nearby Workers
             </div>
+
           </div>
+
 
           <div class="verified-mini">
             ✓ Verified
@@ -156,6 +279,7 @@
         </div>
 
 
+        <!-- WORKER LIST -->
         <div id="worker-list">
 
           <div class="loading-card">
@@ -163,13 +287,21 @@
             <div class="loading-spinner"></div>
 
             <div>
-              <strong>Finding workers...</strong>
-              <small>Loading verified professionals</small>
+
+              <strong>
+                Finding workers...
+              </strong>
+
+              <small>
+                Loading verified professionals
+              </small>
+
             </div>
 
           </div>
 
         </div>
+
 
       </section>
 
@@ -179,25 +311,58 @@
     <!-- BOTTOM NAV -->
     <nav class="nav">
 
+
       <div class="nav-item active">
-        <div class="nav-icon">⌂</div>
-        <span>Home</span>
+
+        <div class="nav-icon">
+          ⌂
+        </div>
+
+        <span>
+          Home
+        </span>
+
       </div>
 
-      <div class="nav-item">
-        <div class="nav-icon">⌕</div>
-        <span>Search</span>
-      </div>
 
       <div class="nav-item">
-        <div class="nav-icon">▣</div>
-        <span>Requests</span>
+
+        <div class="nav-icon">
+          ⌕
+        </div>
+
+        <span>
+          Search
+        </span>
+
       </div>
 
+
       <div class="nav-item">
-        <div class="nav-icon">◉</div>
-        <span>Profile</span>
+
+        <div class="nav-icon">
+          ▣
+        </div>
+
+        <span>
+          Requests
+        </span>
+
       </div>
+
+
+      <div class="nav-item">
+
+        <div class="nav-icon">
+          ◉
+        </div>
+
+        <span>
+          Profile
+        </span>
+
+      </div>
+
 
     </nav>
 
@@ -205,10 +370,14 @@
 
 
   <!-- SUPABASE -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script
+    src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2">
+  </script>
+
 
   <!-- APP -->
   <script src="app.js"></script>
+
 
 </body>
 
