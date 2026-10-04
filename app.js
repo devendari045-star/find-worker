@@ -4941,18 +4941,34 @@ function showFindWorkerRoleSelection(force = false){
 
             overlay.remove();
 
-            if(role === "worker"){
+if(role === "worker"){
 
-              setTimeout(
-                () => {
-                  openWorkerRegistration();
-                },
-                120
-              );
+  setTimeout(
+    () => {
 
-              return;
+      const workerMobile =
+        localStorage.getItem(
+          "findworker_worker_mobile"
+        );
 
-            }
+      if(workerMobile){
+
+        openCustomerRequests();
+
+      }
+      else{
+
+        openWorkerRegistration();
+
+      }
+
+    },
+    120
+  );
+
+  return;
+
+}
 
             if(role === "customer"){
 
