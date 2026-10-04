@@ -18,7 +18,7 @@ const SUPABASE_URL =
 */ 
  
 const SUPABASE_KEY = 
-  "sb_publishable_QL9UvmHtxzM9fvZAG8TFnw_UvpOEY3i"; 
+  "HIDENT"; 
  
 const supabaseClient = 
   supabase.createClient( 
@@ -699,6 +699,8 @@ function createWorkerCard(
  
       showWorkerProfile( 
         worker 
+      );
+               worker 
       ); 
  
     } 
@@ -1240,46 +1242,6 @@ function openRequestServiceForm(
           return;
         }
 
-
-        try{
-
-          const existingRequests =
-            JSON.parse(
-              localStorage.getItem(
-                "findworker_customer_requests"
-              ) ||
-              "[]"
-            );
-
-          existingRequests.unshift({
-            worker_id: worker.id,
-            worker_name: worker.name,
-            service: worker.service,
-            customer_name: customerName,
-            customer_mobile: customerMobile,
-            area: customerArea,
-            request_details: requestDetails,
-            status: "pending",
-            created_at: new Date().toISOString()
-          });
-
-          localStorage.setItem(
-            "findworker_customer_requests",
-            JSON.stringify(
-              existingRequests.slice(0, 30)
-            )
-          );
-
-        }
-        catch(localStorageError){
-
-          console.warn(
-            "Could not save local request history:",
-            localStorageError
-          );
-
-        }
-
         message.textContent =
           "Request sent successfully!";
 
@@ -1798,32 +1760,375 @@ function openWorkerPhotoUpload(
 
           uploadButton.disabled =
             false;
+
+          skipButton.disabled =
+            false;
+
+          uploadButton.textContent =
+            "Upload Profile Photo";
+
+          return;
+
+        }
+
+        const {
+          data:
+            publicData
+        } =
+          supabaseClient
+            .storage
+            .from(
+              "worker-photos"
+            )
+            .getPublicUrl(
+              storagePath
+            );
+
+        const publicPhotoURL =
+          publicData &&
+          publicData.publicUrl
+            ? publicData.publicUrl
+            : "";
+
+        if(!publicPhotoURL){
+
+          message.textContent =
+            "Photo URL create nahi ho paaya.";
+
+          uploadButton.disabled =
+            false;
+
+          skipButton.disabled =
+            false;
+
+          uploadButton.textContent =
+            "Upload Profile Photo";
+
+          return;
+
+        }
+
+        const {
+          error:
+            updateError
+        } =
+          await supabaseClient
+            .from("workers")
+            .update({
+              photo_url:
+                publicPhotoURL
+            })
+            .eq(
+              "id",
+              worker.id
+            )
+            .eq(
+              "verification_status",
+              "pending"
+            )
+            .is(
+              "photo_url",
+              null
+            );
+
+        if(updateError){
+
+          console.error(
+            "Worker photo database update error:",
+            updateError
+          );
+
+          message.textContent =
+            "Photo upload ho gayi, lekin profile me save nahi ho paayi.";
+
+          uploadButton.disabled =
+            false;
+
+          skipButton.disabled =
+            false;
+
+          uploadButton.textContent =
+            "Upload Profile Photo";
+
+          return;
+
+        }
+
+        message.className =
+          "fw-register-message success";
+
+        message.innerHTML = `
+
+          <strong>
+            Profile photo added successfully!
+          </strong>
+
+          <br>
+
+          Aapki profile verification ke liye pending hai.
+
+        `;
+
+        uploadButton.textContent =
+          "Photo Added";
+
+        setTimeout(
+          () => modal.remove(),
+          1800
+        );
+
+      }
+      catch(error){
+
+        console.error(
+          "Worker profile photo failed:",
+          error
+        );
+
+        message.textContent =
+          "Something went wrong. Please try again.";
+
+        uploadButton.disabled =
+          false;
+
+        skipButton.disabled =
+          false;
+
+        uploadButton.textContent =
+          "Upload Profile Photo";
+
+      }
+
+    }
+  );
+
+}
+
+
 /* =========================================================
-   FINAL WORKER LOADER FIX
-   Uses existing security-definer RPC
+   WORKER REGISTRATION
+   ADDED WITHOUT CHANGING EXISTING CUSTOMER APP
 ========================================================= */
 
-loadWorkers = async function(serviceFilter = ""){
+function openWorkerRegistration(){
 
-  if(!workerList){
-    return;
+  const old =
+    document.getElementById(
+      "fw-worker-registration"
+    );
+
+  if(old){
+    old.remove();
   }
 
-  workerList.innerHTML = `
+  const modal =
+    document.createElement(
+      "div"
+    );
 
-    <div class="loading-card">
+  modal.id =
+    "fw-worker-registration";
 
-      <div class="loading-spinner"></div>
+  modal.innerHTML = `
 
-      <div>
+    <div class="fw-worker-register-overlay">
 
-        <strong>
-          Finding workers...
-        </strong>
+      <div class="fw-worker-register-box">
 
-        <small>
-          Loading verified professionals
-        </small>
+        <button
+          type="button"
+          class="fw-worker-register-close"
+        >
+          ×
+        </button>
+
+        <div class="fw-register-header">
+
+          <div class="fw-register-icon">
+            👷
+          </div>
+
+          <h2>
+            Register as a Worker
+          </h2>
+
+          <p>
+            Apni service FindWorker par add karein.
+          </p>
+
+        </div>
+
+        <form
+          id="fw-worker-register-form"
+        >
+
+          <label>
+            Full Name *
+          </label>
+
+          <input
+            type="text"
+            id="fw-worker-name"
+            required
+            placeholder="Enter your full name"
+          >
+
+          <label>
+            Mobile Number *
+          </label>
+
+          <input
+            type="tel"
+            id="fw-worker-mobile"
+            required
+            inputmode="numeric"
+            placeholder="Enter mobile number"
+          >
+
+          <label>
+            Service *
+          </label>
+
+          <select
+            id="fw-worker-service"
+            required
+          >
+
+            <option value="">
+              Select your service
+            </option>
+
+            ${ALL_SERVICES.map(
+              service => `
+                <option value="${escapeHTML(service)}">
+                  ${escapeHTML(service)}
+                </option>
+              `
+            ).join("")}
+
+          </select>
+
+          <label>
+            Area *
+          </label>
+
+          <input
+            type="text"
+            id="fw-worker-area"
+            required
+            placeholder="Enter your area"
+          >
+
+          <label>
+            Experience (Years) *
+          </label>
+
+          <input
+            type="number"
+            id="fw-worker-experience"
+            required
+            min="0"
+            max="100"
+            step="1"
+            placeholder="Example: 5"
+          >
+
+          <div
+            id="fw-experience-note"
+            class="fw-experience-note"
+          >
+            Experience proof is required only for 6 years or more.
+          </div>
+
+          <div
+            id="fw-proof-section"
+            class="fw-proof-section"
+          >
+
+            <label>
+              Experience Proof *
+            </label>
+
+            <input
+              type="file"
+              id="fw-experience-proof"
+              accept=".jpg,.jpeg,.png,.pdf"
+            >
+
+            <small>
+              6+ years experience ke liye proof mandatory hai.
+              JPG, PNG ya PDF.
+            </small>
+
+          </div>
+
+          <label>
+            Starting Charge *
+          </label>
+
+          <input
+            type="number"
+            id="fw-worker-charge"
+            required
+            min="0"
+            placeholder="Example: 500"
+          >
+
+          <label>
+            Availability *
+          </label>
+
+          <select
+            id="fw-worker-availability"
+            required
+          >
+
+            <option value="">
+              Select availability
+            </option>
+
+            <option value="Available Now">
+              Available Now
+            </option>
+
+            <option value="Available Today">
+              Available Today
+            </option>
+
+            <option value="Available Tomorrow">
+              Available Tomorrow
+            </option>
+
+            <option value="By Appointment">
+              By Appointment
+            </option>
+
+          </select>
+
+          <label>
+            About / Description
+          </label>
+
+          <textarea
+            id="fw-worker-description"
+            rows="4"
+            placeholder="Apne experience aur service ke baare mein likhein..."
+          ></textarea>
+
+          <div
+            id="fw-register-message"
+            class="fw-register-message"
+          ></div>
+
+          <button
+            type="submit"
+            id="fw-register-submit"
+            class="fw-register-submit"
+          >
+            Register Worker
+          </button>
+
+        </form>
 
       </div>
 
@@ -1831,162 +2136,1206 @@ loadWorkers = async function(serviceFilter = ""){
 
   `;
 
-  try{
+  document.body.appendChild(
+    modal
+  );
 
-    const rpcPromise =
-      supabaseClient.rpc(
-        "get_approved_workers"
+
+  const closeButton =
+    modal.querySelector(
+      ".fw-worker-register-close"
+    );
+
+
+  closeButton.addEventListener(
+    "click",
+    () => modal.remove()
+  );
+
+
+  modal
+    .querySelector(
+      ".fw-worker-register-overlay"
+    )
+    .addEventListener(
+      "click",
+      event => {
+
+        if(
+          event.target.classList.contains(
+            "fw-worker-register-overlay"
+          )
+        ){
+
+          modal.remove();
+
+        }
+
+      }
+    );
+
+
+  const experienceInput =
+    modal.querySelector(
+      "#fw-worker-experience"
+    );
+
+  const proofSection =
+    modal.querySelector(
+      "#fw-proof-section"
+    );
+
+  const proofInput =
+    modal.querySelector(
+      "#fw-experience-proof"
+    );
+
+
+  function updateProofRequirement(){
+
+    const years =
+      Number(
+        experienceInput.value
       );
 
-    const timeoutPromise =
-      new Promise(resolve => {
+    if(
+      Number.isFinite(years) &&
+      years >= 6
+    ){
 
-        setTimeout(
-          () => {
-
-            resolve({
-
-              data: null,
-
-              error: new Error(
-                "Worker loading timed out."
-              )
-
-            });
-
-          },
-          12000
-        );
-
-      });
-
-    const result =
-      await Promise.race([
-        rpcPromise,
-        timeoutPromise
-      ]);
-
-    const data =
-      result.data;
-
-    const error =
-      result.error;
-
-    if(error){
-
-      console.error(
-        "Worker loading error:",
-        error
+      proofSection.classList.add(
+        "required"
       );
 
-      workerList.innerHTML = `
+      proofInput.required = true;
 
-        <div class="no-workers">
+    }
+    else{
 
-          <div class="empty-icon">
-            ⚠️
-          </div>
+      proofSection.classList.remove(
+        "required"
+      );
 
-          <h3>
-            Unable to load workers
-          </h3>
-
-          <p>
-            ${escapeHTML(
-              error.message ||
-              "Please refresh the page and try again."
-            )}
-          </p>
-
-        </div>
-
-      `;
-
-      return;
+      proofInput.required = false;
 
     }
 
-    let workers =
-      Array.isArray(data)
-        ? data
-        : [];
+  }
 
-    if(serviceFilter){
 
-      const filter =
-        String(serviceFilter)
-          .toLowerCase()
+  experienceInput.addEventListener(
+    "input",
+    updateProofRequirement
+  );
+
+
+  const form =
+    modal.querySelector(
+      "#fw-worker-register-form"
+    );
+
+
+  form.addEventListener(
+    "submit",
+    async event => {
+
+      event.preventDefault();
+
+
+      const submitButton =
+        modal.querySelector(
+          "#fw-register-submit"
+        );
+
+      const message =
+        modal.querySelector(
+          "#fw-register-message"
+        );
+
+
+      const name =
+        modal
+          .querySelector(
+            "#fw-worker-name"
+          )
+          .value
           .trim();
 
-      workers =
-        workers.filter(
-          worker =>
-            String(
-              worker.service || ""
+
+      const mobile =
+        modal
+          .querySelector(
+            "#fw-worker-mobile"
+          )
+          .value
+          .trim();
+
+
+      const service =
+        modal
+          .querySelector(
+            "#fw-worker-service"
+          )
+          .value
+          .trim();
+
+
+      const area =
+        modal
+          .querySelector(
+            "#fw-worker-area"
+          )
+          .value
+          .trim();
+
+
+      const experience =
+        Number(
+          modal
+            .querySelector(
+              "#fw-worker-experience"
             )
-            .toLowerCase()
-            .includes(filter)
+            .value
         );
 
+
+      const charge =
+        modal
+          .querySelector(
+            "#fw-worker-charge"
+          )
+          .value
+          .trim();
+
+
+      const availability =
+        modal
+          .querySelector(
+            "#fw-worker-availability"
+          )
+          .value
+          .trim();
+
+
+      const description =
+        modal
+          .querySelector(
+            "#fw-worker-description"
+          )
+          .value
+          .trim();
+
+
+      const proofFile =
+        proofInput.files[0];
+
+
+      message.className =
+        "fw-register-message";
+
+      message.textContent =
+        "";
+
+
+      if(
+        !name ||
+        !mobile ||
+        !service ||
+        !area ||
+        !Number.isFinite(experience) ||
+        experience < 0 ||
+        !charge ||
+        !availability
+      ){
+
+        message.textContent =
+          "Please fill all required fields.";
+
+        return;
+      }
+
+
+      /*
+        6 YEARS OR MORE
+        = EXPERIENCE PROOF REQUIRED
+      */
+
+      if(
+        experience >= 6 &&
+        !proofFile
+      ){
+
+        message.textContent =
+          "6 years or more experience ke liye Experience Proof mandatory hai.";
+
+        proofSection.classList.add(
+          "required"
+        );
+
+        return;
+      }
+
+
+      /*
+        EXPERIENCE PROOF FILE VALIDATION
+      */
+
+      if(proofFile){
+
+        const allowedTypes = [
+          "image/jpeg",
+          "image/png",
+          "application/pdf"
+        ];
+
+        if(
+          !allowedTypes.includes(
+            proofFile.type
+          )
+        ){
+
+          message.textContent =
+            "Proof sirf JPG, PNG ya PDF file hona chahiye.";
+
+          return;
+        }
+
+
+        /*
+          Maximum 10 MB
+        */
+
+        if(
+          proofFile.size >
+          10 * 1024 * 1024
+        ){
+
+          message.textContent =
+            "Experience Proof maximum 10 MB ka ho sakta hai.";
+
+          return;
+        }
+
+      }
+
+
+      submitButton.disabled =
+        true;
+
+      submitButton.textContent =
+        "Submitting...";
+
+
+      try{
+
+        let experienceProofPath =
+          null;
+
+
+        /*
+          Upload proof first.
+          Existing bucket:
+          experience-proofs
+
+          Existing policy:
+          Allow worker proof upload
+        */
+
+        if(proofFile){
+
+          const safeName =
+            proofFile.name
+              .replace(
+                /[^a-zA-Z0-9._-]/g,
+                "_"
+              );
+
+
+          const uniqueName =
+            `${Date.now()}-${Math.random()
+              .toString(36)
+              .substring(2,10)}-${safeName}`;
+
+
+          const storagePath =
+            `worker-proofs/${uniqueName}`;
+
+
+          const {
+            error:
+              uploadError
+          } =
+            await supabaseClient
+              .storage
+              .from(
+                "experience-proofs"
+              )
+              .upload(
+                storagePath,
+                proofFile,
+                {
+                  cacheControl:
+                    "3600",
+                  upsert:
+                    false,
+                  contentType:
+                    proofFile.type
+                }
+              );
+
+
+          if(uploadError){
+
+            console.error(
+              "Experience proof upload error:",
+              uploadError
+            );
+
+            message.textContent =
+              "Experience Proof upload nahi ho paaya. Please try again.";
+
+            submitButton.disabled =
+              false;
+
+            submitButton.textContent =
+              "Register Worker";
+
+            return;
+          }
+
+
+          /*
+            Save storage path in workers.experience_proof
+          */
+
+          experienceProofPath =
+            storagePath;
+
+        }
+
+
+        /*
+          CREATE WORKER
+          Initially PENDING
+
+          IMPORTANT:
+          Photo is NOT collected during registration.
+          Profile photo will be added after registration.
+        */
+
+        const workerData = {
+
+          name:
+            name,
+
+          mobile:
+            mobile,
+
+          service:
+            service,
+
+          area:
+            area,
+
+          experience:
+            String(experience),
+
+          "starting charge":
+            charge,
+
+          availability:
+            availability,
+
+          description:
+            description,
+
+          verification_status:
+            "pending",
+
+          experience_proof:
+            experienceProofPath
+
+        };
+
+
+        const {
+          data,
+          error
+        } =
+          await supabaseClient
+            .from("workers")
+            .insert(
+              workerData
+            )
+            .select()
+            .single();
+
+
+        if(error){
+
+          console.error(
+            "Worker registration error:",
+            error
+          );
+
+          message.textContent =
+            error.message ||
+            "Worker registration failed.";
+
+          submitButton.disabled =
+            false;
+
+          submitButton.textContent =
+            "Register Worker";
+
+          return;
+        }
+
+
+        console.log(
+          "Worker registered:",
+          data
+        );
+
+
+        form.reset();
+
+        proofSection.classList.remove(
+          "required"
+        );
+
+
+        openWorkerPhotoUpload(
+          modal,
+          data
+        );
+
+
+      }
+      catch(error){
+
+        console.error(
+          "Worker registration failed:",
+          error
+        );
+
+        message.textContent =
+          "Something went wrong. Please try again.";
+
+        submitButton.disabled =
+          false;
+
+        submitButton.textContent =
+          "Register Worker";
+
+      }
+
     }
+  );
 
-    workerList.innerHTML = "";
+}
 
-    if(workers.length === 0){
 
-      showNoWorkers(
-        serviceFilter
+/* =========================================================
+   WORKER REGISTRATION BUTTON
+   Uses existing Profile item if available.
+   Existing customer navigation is otherwise untouched.
+========================================================= */
+
+function setupWorkerRegistration(){
+
+  let profileButton =
+    document.querySelector(
+      '[data-nav="profile"]'
+    );
+
+
+  if(!profileButton){
+
+    profileButton =
+      document.querySelector(
+        '[data-page="profile"]'
       );
 
-      return;
+  }
+
+
+  if(!profileButton){
+
+    profileButton =
+      document.getElementById(
+        "bottom-profile"
+      );
+
+  }
+
+
+  if(!profileButton){
+
+    const bottomNav =
+      document.querySelector(
+        ".bottom-nav"
+      );
+
+
+    if(bottomNav){
+
+      const candidates =
+        bottomNav.querySelectorAll(
+          "button, a, div"
+        );
+
+
+      profileButton =
+        Array.from(
+          candidates
+        ).find(
+          element =>
+            element.textContent
+              .trim()
+              .toLowerCase()
+              .includes("profile")
+        );
 
     }
 
-    workers.forEach(
-      worker => {
+  }
 
-        createWorkerCard(
-          worker
-        );
+
+  if(profileButton){
+
+    profileButton.addEventListener(
+      "click",
+      event => {
+
+        /*
+          Existing customer Profile action
+          was not implemented in APP VERSION 5.
+          Therefore Profile opens worker registration.
+        */
+
+        event.preventDefault();
+
+        openWorkerRegistration();
 
       }
     );
 
   }
-  catch(error){
 
-    console.error(
-      "Final worker loader error:",
-      error
-    );
+}
 
-    workerList.innerHTML = `
 
-      <div class="no-workers">
+/* =========================================================
+   REGISTRATION + REQUEST CSS
+   Added dynamically.
+   Existing style.css remains untouched.
+========================================================= */
 
-        <div class="empty-icon">
-          ⚠️
-        </div>
+(function addFindWorkerExtraStyles(){
 
-        <h3>
-          Unable to load workers
-        </h3>
+  if(
+    document.getElementById(
+      "findworker-extra-styles"
+    )
+  ){
 
-        <p>
-          ${escapeHTML(
-            error.message ||
-            "Please refresh the page and try again."
-          )}
-        </p>
-
-      </div>
-
-    `;
+    return;
 
   }
 
-};
+
+  const style =
+    document.createElement(
+      "style"
+    );
 
 
-/* Run the fixed loader immediately */
+  style.id =
+    "findworker-extra-styles";
+
+
+  style.textContent = `
+
+    /* ================================================
+       REQUEST SERVICE
+    ================================================ */
+
+    .fw-request-modal,
+    #fw-worker-registration{
+
+      position:fixed;
+      inset:0;
+      z-index:99999;
+
+    }
+
+
+    .fw-request-modal{
+
+      background:rgba(
+        0,
+        0,
+        0,
+        .55
+      );
+
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:18px;
+
+    }
+
+
+    .fw-request-box{
+
+      position:relative;
+      width:100%;
+      max-width:470px;
+      max-height:90vh;
+      overflow-y:auto;
+      background:#fff;
+      border-radius:22px;
+      padding:24px;
+      box-sizing:border-box;
+      box-shadow:
+        0 20px 60px rgba(
+          0,
+          0,
+          0,
+          .25
+        );
+
+    }
+
+
+    .fw-request-close{
+
+      position:absolute;
+      right:14px;
+      top:12px;
+      width:36px;
+      height:36px;
+      border:0;
+      border-radius:50%;
+      background:#f1f3f5;
+      font-size:24px;
+      cursor:pointer;
+
+    }
+
+
+    .fw-request-box h2{
+
+      margin:0 0 8px;
+
+    }
+
+
+    .fw-request-worker{
+
+      color:#666;
+      margin-bottom:18px;
+
+    }
+
+
+    .fw-request-form{
+
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+
+    }
+
+
+    .fw-request-form label{
+
+      font-size:14px;
+      font-weight:600;
+      margin-top:6px;
+
+    }
+
+
+    .fw-request-form input,
+    .fw-request-form textarea{
+
+      width:100%;
+      box-sizing:border-box;
+      border:1px solid #d9dee5;
+      border-radius:11px;
+      padding:12px;
+      font-size:14px;
+      font-family:inherit;
+      outline:none;
+
+    }
+
+
+    .fw-request-form textarea{
+
+      min-height:90px;
+      resize:vertical;
+
+    }
+
+
+    .fw-request-submit{
+
+      border:0;
+      border-radius:12px;
+      padding:13px;
+      background:#1769e0;
+      color:#fff;
+      font-weight:700;
+      cursor:pointer;
+      margin-top:8px;
+
+    }
+
+
+    .fw-request-submit:disabled{
+
+      opacity:.6;
+      cursor:not-allowed;
+
+    }
+
+
+    .fw-request-message{
+
+      text-align:center;
+      min-height:20px;
+      font-size:14px;
+
+    }
+
+
+    .fw-request-message.success{
+
+      color:#16833b;
+      font-weight:600;
+
+    }
+
+
+    .fw-request-service-btn{
+
+      width:100%;
+      margin-top:16px;
+      border:0;
+      border-radius:12px;
+      padding:13px;
+      background:#1769e0;
+      color:#fff;
+      font-weight:700;
+      cursor:pointer;
+
+    }
+
+
+    /* ================================================
+       WORKER REGISTRATION
+    ================================================ */
+
+    .fw-worker-register-overlay{
+
+      position:absolute;
+      inset:0;
+      background:rgba(
+        0,
+        0,
+        0,
+        .58
+      );
+
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:18px;
+      box-sizing:border-box;
+
+    }
+
+
+    .fw-worker-register-box{
+
+      position:relative;
+      width:100%;
+      max-width:520px;
+      max-height:92vh;
+      overflow-y:auto;
+      background:#fff;
+      border-radius:24px;
+      padding:26px;
+      box-sizing:border-box;
+      box-shadow:
+        0 25px 70px rgba(
+          0,
+          0,
+          0,
+          .28
+        );
+
+    }
+
+
+    .fw-worker-register-close{
+
+      position:absolute;
+      right:14px;
+      top:13px;
+      width:38px;
+      height:38px;
+      border:0;
+      border-radius:50%;
+      background:#f1f3f5;
+      font-size:25px;
+      line-height:1;
+      cursor:pointer;
+
+    }
+
+
+    .fw-register-header{
+
+      text-align:center;
+      padding:4px 35px 18px;
+
+    }
+
+
+    .fw-register-icon{
+
+      width:60px;
+      height:60px;
+      border-radius:50%;
+      margin:0 auto 10px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background:#eef5ff;
+      font-size:30px;
+
+    }
+
+
+    .fw-register-header h2{
+
+      margin:0;
+      color:#172b4d;
+      font-size:23px;
+
+    }
+
+
+    .fw-register-header p{
+
+      margin:7px 0 0;
+      color:#6b7280;
+      font-size:14px;
+
+    }
+
+
+    #fw-worker-register-form{
+
+      display:flex;
+      flex-direction:column;
+      gap:7px;
+
+    }
+
+
+    #fw-worker-register-form label{
+
+      font-size:14px;
+      font-weight:700;
+      color:#263238;
+      margin-top:7px;
+
+    }
+
+
+    #fw-worker-register-form input,
+    #fw-worker-register-form select,
+    #fw-worker-register-form textarea{
+
+      width:100%;
+      box-sizing:border-box;
+      border:1px solid #d6dce4;
+      border-radius:11px;
+      background:#fff;
+      padding:12px;
+      font-size:14px;
+      font-family:inherit;
+      outline:none;
+
+    }
+
+
+    #fw-worker-register-form input:focus,
+    #fw-worker-register-form select:focus,
+    #fw-worker-register-form textarea:focus{
+
+      border-color:#1769e0;
+      box-shadow:
+        0 0 0 3px rgba(
+          23,
+          105,
+          224,
+          .08
+        );
+
+    }
+
+
+    #fw-worker-register-form textarea{
+
+      resize:vertical;
+      min-height:90px;
+
+    }
+
+
+    .fw-experience-note{
+
+      background:#f5f8fc;
+      color:#59636f;
+      border-radius:10px;
+      padding:10px 12px;
+      font-size:12px;
+      line-height:1.4;
+      margin-top:2px;
+
+    }
+
+
+    .fw-proof-section{
+
+      display:none;
+      background:#fff8e8;
+      border:1px solid #f0d48a;
+      border-radius:12px;
+      padding:12px;
+      margin-top:4px;
+
+    }
+
+
+    .fw-proof-section.required{
+
+      display:flex;
+      flex-direction:column;
+      gap:6px;
+
+    }
+
+
+    .fw-proof-section small{
+
+      color:#765d17;
+      line-height:1.4;
+
+    }
+
+
+    .fw-register-submit{
+
+      width:100%;
+      border:0;
+      border-radius:13px;
+      padding:14px;
+      background:#1769e0;
+      color:#fff;
+      font-size:15px;
+      font-weight:700;
+      cursor:pointer;
+      margin-top:13px;
+
+    }
+
+
+    .fw-register-submit:hover{
+
+      filter:brightness(.96);
+
+    }
+
+
+    .fw-register-submit:disabled{
+
+      opacity:.6;
+      cursor:not-allowed;
+
+    }
+
+
+    .fw-register-message{
+
+      min-height:20px;
+      margin-top:5px;
+      text-align:center;
+      color:#c62828;
+      font-size:13px;
+      line-height:1.5;
+
+    }
+
+
+    .fw-register-message.success{
+
+      color:#16833b;
+      background:#eef9f1;
+      border-radius:11px;
+      padding:11px;
+
+    }
+
+
+    /* ================================================
+       PROFILE PHOTO AFTER REGISTRATION
+    ================================================ */
+
+    .fw-photo-upload-step{
+
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+
+    }
+
+
+    .fw-photo-preview{
+
+      width:110px;
+      height:110px;
+      margin:0 auto 12px;
+      border-radius:50%;
+      background:#eef5ff;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      overflow:hidden;
+      font-size:45px;
+      color:#1769e0;
+      border:3px solid #e6edf8;
+    }
+
+
+    .fw-photo-preview img{
+
+      width:100%;
+      height:100%;
+      object-fit:cover;
+      display:block;
+
+    }
+
+
+    .fw-photo-upload-step label{
+
+      font-size:14px;
+      font-weight:700;
+      color:#263238;
+
+    }
+
+
+    .fw-photo-upload-step input[type="file"]{
+
+      width:100%;
+      box-sizing:border-box;
+      border:1px solid #d6dce4;
+      border-radius:11px;
+      background:#fff;
+      padding:10px;
+      font-size:14px;
+
+    }
+
+
+    .fw-photo-upload-step small{
+
+      color:#6b7280;
+      font-size:12px;
+      line-height:1.4;
+
+    }
+
+
+    .fw-skip-photo-btn{
+
+      width:100%;
+      border:1px solid #d6dce4;
+      border-radius:13px;
+      padding:13px;
+      background:#fff;
+      color:#4b5563;
+      font-size:14px;
+      font-weight:700;
+      cursor:pointer;
+      margin-top:4px;
+
+    }
+
+
+    .fw-skip-photo-btn:hover{
+
+      background:#f7f9fc;
+
+    }
+
+
+    @media(max-width:520px){
+
+      .fw-worker-register-overlay{
+
+        padding:10px;
+
+      }
+
+
+      .fw-worker-register-box{
+
+        max-height:95vh;
+        padding:20px 16px;
+        border-radius:19px;
+
+      }
+
+
+      .fw-register-header{
+
+        padding-left:25px;
+        padding-right:25px;
+
+      }
+
+    }
+
+  `;
+
+
+  document.head.appendChild(
+    style
+  );
+
+})();
+
+
+/* =========================================================
+   INITIAL LOAD
+========================================================= */
+
 loadWorkers();
+
+
+/*
+  Registration button setup after
+  current page elements are ready.
+*/
+
+setupWorkerRegistration();
