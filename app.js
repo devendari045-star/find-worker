@@ -1798,3 +1798,195 @@ function openWorkerPhotoUpload(
 
           uploadButton.disabled =
             false;
+/* =========================================================
+   FINAL WORKER LOADER FIX
+   Uses existing security-definer RPC
+========================================================= */
+
+loadWorkers = async function(serviceFilter = ""){
+
+  if(!workerList){
+    return;
+  }
+
+  workerList.innerHTML = `
+
+    <div class="loading-card">
+
+      <div class="loading-spinner"></div>
+
+      <div>
+
+        <strong>
+          Finding workers...
+        </strong>
+
+        <small>
+          Loading verified professionals
+        </small>
+
+      </div>
+
+    </div>
+
+  `;
+
+  try{
+
+    const rpcPromise =
+      supabaseClient.rpc(
+        "get_approved_workers"
+      );
+
+    const timeoutPromise =
+      new Promise(resolve => {
+
+        setTimeout(
+          () => {
+
+            resolve({
+
+              data: null,
+
+              error: new Error(
+                "Worker loading timed out."
+              )
+
+            });
+
+          },
+          12000
+        );
+
+      });
+
+    const result =
+      await Promise.race([
+        rpcPromise,
+        timeoutPromise
+      ]);
+
+    const data =
+      result.data;
+
+    const error =
+      result.error;
+
+    if(error){
+
+      console.error(
+        "Worker loading error:",
+        error
+      );
+
+      workerList.innerHTML = `
+
+        <div class="no-workers">
+
+          <div class="empty-icon">
+            ⚠️
+          </div>
+
+          <h3>
+            Unable to load workers
+          </h3>
+
+          <p>
+            ${escapeHTML(
+              error.message ||
+              "Please refresh the page and try again."
+            )}
+          </p>
+
+        </div>
+
+      `;
+
+      return;
+
+    }
+
+    let workers =
+      Array.isArray(data)
+        ? data
+        : [];
+
+    if(serviceFilter){
+
+      const filter =
+        String(serviceFilter)
+          .toLowerCase()
+          .trim();
+
+      workers =
+        workers.filter(
+          worker =>
+            String(
+              worker.service || ""
+            )
+            .toLowerCase()
+            .includes(filter)
+        );
+
+    }
+
+    workerList.innerHTML = "";
+
+    if(workers.length === 0){
+
+      showNoWorkers(
+        serviceFilter
+      );
+
+      return;
+
+    }
+
+    workers.forEach(
+      worker => {
+
+        createWorkerCard(
+          worker
+        );
+
+      }
+    );
+
+  }
+  catch(error){
+
+    console.error(
+      "Final worker loader error:",
+      error
+    );
+
+    workerList.innerHTML = `
+
+      <div class="no-workers">
+
+        <div class="empty-icon">
+          ⚠️
+        </div>
+
+        <h3>
+          Unable to load workers
+        </h3>
+
+        <p>
+          ${escapeHTML(
+            error.message ||
+            "Please refresh the page and try again."
+          )}
+        </p>
+
+      </div>
+
+    `;
+
+  }
+
+};
+
+
+/* Run the fixed loader immediately */
+loadWorkers();
