@@ -1241,6 +1241,9 @@ function openRequestServiceForm(
         }
 
 
+        /* Save a local copy so the customer Requests screen
+           can show requests without exposing all service_requests
+           rows through a public SELECT policy. */
         try{
 
           const existingRequests =
@@ -2166,6 +2169,14 @@ function openWorkerRegistration(){
             Register Worker
           </button>
 
+          <button
+            type="button"
+            id="fw-switch-from-worker"
+            class="fw-switch-profile-btn"
+          >
+            Switch Profile
+          </button>
+
         </form>
 
       </div>
@@ -2270,6 +2281,26 @@ function openWorkerRegistration(){
   const form =
     modal.querySelector(
       "#fw-worker-register-form"
+    );
+
+
+  modal
+    .querySelector(
+      "#fw-switch-from-worker"
+    )
+    .addEventListener(
+      "click",
+      () => {
+
+        localStorage.removeItem(
+          "findworker_user_role"
+        );
+
+        modal.remove();
+
+        showFindWorkerRoleSelection(true);
+
+      }
     );
 
 
@@ -2393,6 +2424,11 @@ function openWorkerRegistration(){
       }
 
 
+      /*
+        6 YEARS OR MORE
+        = EXPERIENCE PROOF REQUIRED
+      */
+
       if(
         experience >= 6 &&
         !proofFile
@@ -2408,6 +2444,10 @@ function openWorkerRegistration(){
         return;
       }
 
+
+      /*
+        EXPERIENCE PROOF FILE VALIDATION
+      */
 
       if(proofFile){
 
@@ -2429,6 +2469,10 @@ function openWorkerRegistration(){
           return;
         }
 
+
+        /*
+          Maximum 10 MB
+        */
 
         if(
           proofFile.size >
@@ -2456,6 +2500,15 @@ function openWorkerRegistration(){
         let experienceProofPath =
           null;
 
+
+        /*
+          Upload proof first.
+          Existing bucket:
+          experience-proofs
+
+          Existing policy:
+          Allow worker proof upload
+        */
 
         if(proofFile){
 
@@ -2520,11 +2573,24 @@ function openWorkerRegistration(){
           }
 
 
+          /*
+            Save storage path in workers.experience_proof
+          */
+
           experienceProofPath =
             storagePath;
 
         }
 
+
+        /*
+          CREATE WORKER
+          Initially PENDING
+
+          IMPORTANT:
+          Photo is NOT collected during registration.
+          Profile photo will be added after registration.
+        */
 
         const {
           data: newWorkerId,
@@ -2589,6 +2655,19 @@ function openWorkerRegistration(){
           "Worker registered:",
           newWorkerId
         );
+
+        localStorage.setItem(
+          "findworker_worker_mobile",
+          mobile
+        );
+
+        localStorage.setItem(
+          "findworker_user_role",
+          "worker"
+        );
+
+        document.body.dataset.findworkerRole =
+          "worker";
 
 
         form.reset();
@@ -2857,7 +2936,630 @@ function setupCustomerRequestsButton(){
 
 /* =========================================================
    WORKER REGISTRATION BUTTON
+   Uses existing Profile item if available.
+   Existing customer navigation is otherwise untouched.
 ========================================================= */
+
+
+
+/* =========================================================
+   CUSTOMER PROFILE
+   Separate from Worker Profile
+========================================================= */
+
+function openCustomerProfile(){
+
+  const old =
+    document.getElementById(
+      "fw-customer-profile"
+    );
+
+  if(old){
+    old.remove();
+  }
+
+  const modal =
+    document.createElement("div");
+
+  modal.id =
+    "fw-customer-profile";
+
+  modal.innerHTML = `
+
+    <div class="fw-customer-profile-overlay">
+
+      <div class="fw-customer-profile-box">
+
+        <button
+          type="button"
+          class="fw-customer-profile-close"
+          aria-label="Close"
+        >
+          ×
+        </button>
+
+        <div class="fw-customer-profile-header">
+
+          <div class="fw-customer-profile-icon">
+            🏠
+          </div>
+
+          <h2>
+            Customer Profile
+          </h2>
+
+          <p>
+            Ye profile Worker Profile se completely alag hai.
+          </p>
+
+        </div>
+
+        <form id="fw-customer-profile-form">
+
+          <label>
+            Full Name *
+          </label>
+
+          <input
+            type="text"
+            id="fw-customer-name"
+            required
+            placeholder="Enter your name"
+          >
+
+          <label>
+            Mobile Number *
+          </label>
+
+          <input
+            type="tel"
+            id="fw-customer-mobile"
+            required
+            inputmode="numeric"
+            placeholder="Enter mobile number"
+          >
+
+          <label>
+            Area
+          </label>
+
+          <input
+            type="text"
+            id="fw-customer-area"
+            placeholder="Enter your area"
+          >
+
+          <label>
+            Profile Photo
+          </label>
+
+          <input
+            type="file"
+            id="fw-customer-photo"
+            accept=".jpg,.jpeg,.png,.webp"
+          >
+
+          <small class="fw-customer-profile-note">
+            JPG, PNG ya WEBP. Maximum 5 MB.
+          </small>
+
+          <div
+            id="fw-customer-profile-preview"
+            class="fw-customer-profile-preview"
+          >
+            👤
+          </div>
+
+          <div
+            id="fw-customer-profile-message"
+            class="fw-customer-profile-message"
+          ></div>
+
+          <button
+            type="submit"
+            class="fw-customer-profile-save"
+          >
+            Save Customer Profile
+          </button>
+
+          <button
+            type="button"
+            class="fw-switch-profile-btn"
+            id="fw-switch-from-customer"
+          >
+            Switch Profile
+          </button>
+
+        </form>
+
+      </div>
+
+    </div>
+
+  `;
+
+  document.body.appendChild(modal);
+
+  const closeButton =
+    modal.querySelector(
+      ".fw-customer-profile-close"
+    );
+
+  const form =
+    modal.querySelector(
+      "#fw-customer-profile-form"
+    );
+
+  const nameInput =
+    modal.querySelector(
+      "#fw-customer-name"
+    );
+
+  const mobileInput =
+    modal.querySelector(
+      "#fw-customer-mobile"
+    );
+
+  const areaInput =
+    modal.querySelector(
+      "#fw-customer-area"
+    );
+
+  const photoInput =
+    modal.querySelector(
+      "#fw-customer-photo"
+    );
+
+  const preview =
+    modal.querySelector(
+      "#fw-customer-profile-preview"
+    );
+
+  const message =
+    modal.querySelector(
+      "#fw-customer-profile-message"
+    );
+
+  const savedMobile =
+    localStorage.getItem(
+      "findworker_customer_mobile"
+    ) || "";
+
+  mobileInput.value =
+    savedMobile;
+
+  closeButton.addEventListener(
+    "click",
+    () => modal.remove()
+  );
+
+  modal
+    .querySelector(
+      ".fw-customer-profile-overlay"
+    )
+    .addEventListener(
+      "click",
+      event => {
+
+        if(
+          event.target.classList.contains(
+            "fw-customer-profile-overlay"
+          )
+        ){
+
+          modal.remove();
+
+        }
+
+      }
+    );
+
+  function showCustomerPhoto(url){
+
+    if(!url){
+
+      preview.innerHTML = "👤";
+      return;
+
+    }
+
+    preview.innerHTML = `
+
+      <img
+        src="${escapeHTML(url)}"
+        alt="Customer profile photo"
+      >
+
+    `;
+
+  }
+
+  async function loadExistingCustomer(){
+
+    const mobile =
+      mobileInput.value.trim();
+
+    if(!mobile){
+      return;
+    }
+
+    try{
+
+      const {
+        data,
+        error
+      } =
+        await supabaseClient
+          .from("customer_profiles")
+          .select("*")
+          .eq(
+            "mobile",
+            mobile
+          )
+          .maybeSingle();
+
+      if(error){
+
+        console.warn(
+          "Customer profile read error:",
+          error
+        );
+
+        return;
+
+      }
+
+      if(!data){
+        return;
+      }
+
+      nameInput.value =
+        data.name || "";
+
+      areaInput.value =
+        data.area || "";
+
+      showCustomerPhoto(
+        data.photo_url || ""
+      );
+
+    }
+    catch(error){
+
+      console.warn(
+        "Customer profile load failed:",
+        error
+      );
+
+    }
+
+  }
+
+  loadExistingCustomer();
+
+  photoInput.addEventListener(
+    "change",
+    () => {
+
+      const file =
+        photoInput.files[0];
+
+      if(!file){
+        return;
+      }
+
+      const allowedTypes = [
+        "image/jpeg",
+        "image/png",
+        "image/webp"
+      ];
+
+      if(
+        !allowedTypes.includes(
+          file.type
+        )
+      ){
+
+        message.textContent =
+          "Photo sirf JPG, PNG ya WEBP honi chahiye.";
+
+        photoInput.value = "";
+        return;
+
+      }
+
+      if(
+        file.size >
+        5 * 1024 * 1024
+      ){
+
+        message.textContent =
+          "Profile photo maximum 5 MB ki ho sakti hai.";
+
+        photoInput.value = "";
+        return;
+
+      }
+
+      const reader =
+        new FileReader();
+
+      reader.onload =
+        event => {
+
+          preview.innerHTML = `
+
+            <img
+              src="${event.target.result}"
+              alt="Customer profile preview"
+            >
+
+          `;
+
+        };
+
+      reader.readAsDataURL(
+        file
+      );
+
+      message.textContent = "";
+
+    }
+  );
+
+  form.addEventListener(
+    "submit",
+    async event => {
+
+      event.preventDefault();
+
+      const saveButton =
+        form.querySelector(
+          ".fw-customer-profile-save"
+        );
+
+      const name =
+        nameInput.value.trim();
+
+      const mobile =
+        mobileInput.value.trim();
+
+      const area =
+        areaInput.value.trim();
+
+      const photoFile =
+        photoInput.files[0];
+
+      if(
+        !name ||
+        !mobile
+      ){
+
+        message.textContent =
+          "Name aur mobile number required hai.";
+
+        return;
+
+      }
+
+      if(photoFile){
+
+        const allowedTypes = [
+          "image/jpeg",
+          "image/png",
+          "image/webp"
+        ];
+
+        if(
+          !allowedTypes.includes(
+            photoFile.type
+          )
+        ){
+
+          message.textContent =
+            "Photo sirf JPG, PNG ya WEBP honi chahiye.";
+
+          return;
+
+        }
+
+        if(
+          photoFile.size >
+          5 * 1024 * 1024
+        ){
+
+          message.textContent =
+            "Profile photo maximum 5 MB ki ho sakti hai.";
+
+          return;
+
+        }
+
+      }
+
+      saveButton.disabled =
+        true;
+
+      saveButton.textContent =
+        "Saving...";
+
+      message.textContent =
+        "";
+
+      try{
+
+        let photoURL =
+          null;
+
+        const {
+          data: existing,
+          error: existingError
+        } =
+          await supabaseClient
+            .from("customer_profiles")
+            .select("photo_url")
+            .eq(
+              "mobile",
+              mobile
+            )
+            .maybeSingle();
+
+        if(existingError){
+          throw existingError;
+        }
+
+        photoURL =
+          existing?.photo_url ||
+          null;
+
+        if(photoFile){
+
+          const safeName =
+            photoFile.name
+              .replace(
+                /[^a-zA-Z0-9._-]/g,
+                "_"
+              );
+
+          const storagePath =
+            `customer-profile/${Date.now()}-${Math.random()
+              .toString(36)
+              .substring(2,10)}-${safeName}`;
+
+          const {
+            error: uploadError
+          } =
+            await supabaseClient
+              .storage
+              .from("worker-photos")
+              .upload(
+                storagePath,
+                photoFile,
+                {
+                  cacheControl:
+                    "3600",
+                  upsert:
+                    false,
+                  contentType:
+                    photoFile.type
+                }
+              );
+
+          if(uploadError){
+
+            throw uploadError;
+
+          }
+
+          const {
+            data: publicData
+          } =
+            supabaseClient
+              .storage
+              .from("worker-photos")
+              .getPublicUrl(
+                storagePath
+              );
+
+          photoURL =
+            publicData?.publicUrl ||
+            photoURL;
+
+        }
+
+        const {
+          error: saveError
+        } =
+          await supabaseClient
+            .from("customer_profiles")
+            .upsert(
+              {
+                name,
+                mobile,
+                area,
+                photo_url:
+                  photoURL
+              },
+              {
+                onConflict:
+                  "mobile"
+              }
+            );
+
+        if(saveError){
+          throw saveError;
+        }
+
+        localStorage.setItem(
+          "findworker_customer_mobile",
+          mobile
+        );
+
+        localStorage.setItem(
+          "findworker_user_role",
+          "customer"
+        );
+
+        document.body.dataset.findworkerRole =
+          "customer";
+
+        message.className =
+          "fw-customer-profile-message success";
+
+        message.textContent =
+          "Customer Profile saved successfully!";
+
+        saveButton.textContent =
+          "Profile Saved";
+
+        setTimeout(
+          () => modal.remove(),
+          1000
+        );
+
+      }
+      catch(error){
+
+        console.error(
+          "Customer profile failed:",
+          error
+        );
+
+        message.textContent =
+          error.message ||
+          "Customer profile save nahi ho paayi.";
+
+        saveButton.disabled =
+          false;
+
+        saveButton.textContent =
+          "Save Customer Profile";
+
+      }
+
+    }
+  );
+
+  modal
+    .querySelector(
+      "#fw-switch-from-customer"
+    )
+    .addEventListener(
+      "click",
+      () => {
+
+        localStorage.removeItem(
+          "findworker_user_role"
+        );
+
+        modal.remove();
+
+        showFindWorkerRoleSelection(true);
+
+      }
+    );
+
+}
 
 function setupWorkerRegistration(){
 
@@ -2927,7 +3629,26 @@ function setupWorkerRegistration(){
 
         event.preventDefault();
 
-        openWorkerRegistration();
+        const role =
+          localStorage.getItem(
+            "findworker_user_role"
+          );
+
+        if(role === "worker"){
+
+          openWorkerRegistration();
+          return;
+
+        }
+
+        if(role === "customer"){
+
+          openCustomerProfile();
+          return;
+
+        }
+
+        showFindWorkerRoleSelection(true);
 
       }
     );
@@ -2939,6 +3660,8 @@ function setupWorkerRegistration(){
 
 /* =========================================================
    REGISTRATION + REQUEST CSS
+   Added dynamically.
+   Existing style.css remains untouched.
 ========================================================= */
 
 (function addFindWorkerExtraStyles(){
@@ -2965,6 +3688,10 @@ function setupWorkerRegistration(){
 
 
   style.textContent = `
+
+    /* ================================================
+       REQUEST SERVICE
+    ================================================ */
 
     .fw-request-modal,
     #fw-worker-registration{
@@ -3330,7 +4057,6 @@ function setupWorkerRegistration(){
       font-size:13px;
 
     }
-
 
     /* ================================================
        WORKER REGISTRATION
@@ -3722,12 +4448,566 @@ function setupWorkerRegistration(){
 })();
 
 
+
+
+/* =========================================================
+   CUSTOMER PROFILE + ROLE SELECTION CSS
+========================================================= */
+
+(function addFindWorkerProfileRoleStyles(){
+
+  if(
+    document.getElementById(
+      "findworker-profile-role-styles"
+    )
+  ){
+    return;
+  }
+
+  const style =
+    document.createElement(
+      "style"
+    );
+
+  style.id =
+    "findworker-profile-role-styles";
+
+  style.textContent = `
+
+    .fw-customer-profile-overlay{
+      position:absolute;
+      inset:0;
+      background:rgba(0,0,0,.58);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:18px;
+      box-sizing:border-box;
+    }
+
+    #fw-customer-profile{
+      position:fixed;
+      inset:0;
+      z-index:100000;
+    }
+
+    .fw-customer-profile-box{
+      position:relative;
+      width:100%;
+      max-width:520px;
+      max-height:92vh;
+      overflow-y:auto;
+      background:#fff;
+      border-radius:24px;
+      padding:26px;
+      box-sizing:border-box;
+      box-shadow:0 25px 70px rgba(0,0,0,.28);
+    }
+
+    .fw-customer-profile-close{
+      position:absolute;
+      right:14px;
+      top:13px;
+      width:38px;
+      height:38px;
+      border:0;
+      border-radius:50%;
+      background:#f1f3f5;
+      font-size:25px;
+      line-height:1;
+      cursor:pointer;
+    }
+
+    .fw-customer-profile-header{
+      text-align:center;
+      padding:4px 35px 18px;
+    }
+
+    .fw-customer-profile-icon{
+      width:60px;
+      height:60px;
+      border-radius:50%;
+      margin:0 auto 10px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background:#eef5ff;
+      font-size:30px;
+    }
+
+    .fw-customer-profile-header h2{
+      margin:0;
+      color:#172b4d;
+      font-size:23px;
+    }
+
+    .fw-customer-profile-header p{
+      margin:7px 0 0;
+      color:#6b7280;
+      font-size:13px;
+      line-height:1.5;
+    }
+
+    #fw-customer-profile-form{
+      display:flex;
+      flex-direction:column;
+      gap:7px;
+    }
+
+    #fw-customer-profile-form label{
+      font-size:14px;
+      font-weight:700;
+      color:#263238;
+      margin-top:7px;
+    }
+
+    #fw-customer-profile-form input{
+      width:100%;
+      box-sizing:border-box;
+      border:1px solid #d6dce4;
+      border-radius:11px;
+      background:#fff;
+      padding:12px;
+      font-size:14px;
+      font-family:inherit;
+      outline:none;
+    }
+
+    .fw-customer-profile-note{
+      color:#6b7280;
+      font-size:12px;
+      line-height:1.4;
+    }
+
+    .fw-customer-profile-preview{
+      width:110px;
+      height:110px;
+      margin:6px auto 8px;
+      border-radius:50%;
+      overflow:hidden;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background:#eef5ff;
+      border:3px solid #e6edf8;
+      font-size:45px;
+    }
+
+    .fw-customer-profile-preview img{
+      width:100%;
+      height:100%;
+      object-fit:cover;
+      display:block;
+    }
+
+    .fw-customer-profile-save,
+    .fw-switch-profile-btn{
+      width:100%;
+      border-radius:13px;
+      padding:14px;
+      font-size:15px;
+      font-weight:700;
+      cursor:pointer;
+      margin-top:8px;
+      box-sizing:border-box;
+    }
+
+    .fw-customer-profile-save{
+      border:0;
+      background:#1769e0;
+      color:#fff;
+    }
+
+    .fw-switch-profile-btn{
+      border:1px solid #d6dce4;
+      background:#fff;
+      color:#4b5563;
+    }
+
+    .fw-customer-profile-save:disabled{
+      opacity:.6;
+      cursor:not-allowed;
+    }
+
+    .fw-customer-profile-message{
+      min-height:20px;
+      margin-top:5px;
+      text-align:center;
+      color:#c62828;
+      font-size:13px;
+      line-height:1.5;
+    }
+
+    .fw-customer-profile-message.success{
+      color:#16833b;
+      background:#eef9f1;
+      border-radius:11px;
+      padding:11px;
+    }
+
+    #fw-role-selection{
+      position:fixed;
+      inset:0;
+      z-index:1000000;
+    }
+
+    .fw-role-selection-backdrop{
+      position:absolute;
+      inset:0;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:18px;
+      box-sizing:border-box;
+      background:rgba(7,18,36,.88);
+    }
+
+    .fw-role-selection-box{
+      width:100%;
+      max-width:510px;
+      box-sizing:border-box;
+      padding:30px;
+      border-radius:28px;
+      background:#fff;
+      box-shadow:0 30px 90px rgba(0,0,0,.32);
+    }
+
+    .fw-role-brand{
+      display:flex;
+      align-items:center;
+      gap:12px;
+      margin-bottom:24px;
+    }
+
+    .fw-role-logo{
+      width:48px;
+      height:48px;
+      border-radius:15px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background:#1769e0;
+      color:#fff;
+      font-weight:800;
+    }
+
+    .fw-role-brand strong{
+      display:block;
+      color:#172b4d;
+      font-size:18px;
+    }
+
+    .fw-role-brand span{
+      display:block;
+      margin-top:3px;
+      color:#7a8491;
+      font-size:12px;
+    }
+
+    .fw-role-selection-box h1{
+      margin:0;
+      color:#172b4d;
+      font-size:30px;
+    }
+
+    .fw-role-subtitle{
+      margin:8px 0 22px;
+      color:#69727e;
+      font-size:14px;
+      line-height:1.5;
+    }
+
+    .fw-role-options{
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+    }
+
+    .fw-role-card{
+      width:100%;
+      display:flex;
+      align-items:center;
+      gap:14px;
+      text-align:left;
+      border:1px solid #e2e7ee;
+      background:#fff;
+      border-radius:18px;
+      padding:16px;
+      cursor:pointer;
+      transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease;
+    }
+
+    .fw-role-card:hover{
+      transform:translateY(-1px);
+      border-color:#1769e0;
+      box-shadow:0 10px 25px rgba(23,105,224,.10);
+      background:#fbfdff;
+    }
+
+    .fw-role-card-icon{
+      width:52px;
+      height:52px;
+      border-radius:16px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      flex:none;
+      background:#eef5ff;
+      font-size:27px;
+    }
+
+    .fw-role-card-content{
+      min-width:0;
+      flex:1;
+    }
+
+    .fw-role-card-content strong{
+      display:block;
+      color:#172b4d;
+      font-size:16px;
+    }
+
+    .fw-role-card-content span{
+      display:block;
+      margin-top:4px;
+      color:#737d89;
+      font-size:12px;
+      line-height:1.45;
+    }
+
+    .fw-role-arrow{
+      color:#1769e0;
+      font-size:28px;
+      line-height:1;
+      flex:none;
+    }
+
+    @media(max-width:520px){
+      .fw-customer-profile-overlay,
+      .fw-role-selection-backdrop{
+        padding:10px;
+      }
+
+      .fw-customer-profile-box,
+      .fw-role-selection-box{
+        max-height:95vh;
+        padding:20px 16px;
+        border-radius:19px;
+      }
+
+      .fw-role-selection-box h1{
+        font-size:26px;
+      }
+
+      .fw-role-card{
+        padding:14px;
+      }
+    }
+
+  `;
+
+  document.head.appendChild(
+    style
+  );
+
+})();
+
+
+/* =========================================================
+   STEP 1 — USER ROLE SELECTION
+   Worker and Customer use separate profiles.
+========================================================= */
+
+function showFindWorkerRoleSelection(force = false){
+
+  const existing =
+    document.getElementById(
+      "fw-role-selection"
+    );
+
+  if(existing){
+    existing.remove();
+  }
+
+  const savedRole =
+    localStorage.getItem(
+      "findworker_user_role"
+    );
+
+  if(
+    !force &&
+    (
+      savedRole === "worker" ||
+      savedRole === "customer"
+    )
+  ){
+    return;
+  }
+
+  const overlay =
+    document.createElement(
+      "div"
+    );
+
+  overlay.id =
+    "fw-role-selection";
+
+  overlay.innerHTML = `
+
+    <div class="fw-role-selection-backdrop">
+
+      <div class="fw-role-selection-box">
+
+        <div class="fw-role-brand">
+
+          <div class="fw-role-logo">
+            FW
+          </div>
+
+          <div>
+            <strong>FindWorker</strong>
+            <span>Service marketplace</span>
+          </div>
+
+        </div>
+
+        <h1>
+          Aap kaun hain?
+        </h1>
+
+        <p class="fw-role-subtitle">
+          Apni requirement ke hisaab se option choose karein.
+        </p>
+
+        <div class="fw-role-options">
+
+          <button
+            type="button"
+            class="fw-role-card"
+            data-role="worker"
+          >
+
+            <div class="fw-role-card-icon">
+              👷
+            </div>
+
+            <div class="fw-role-card-content">
+              <strong>I am a Worker</strong>
+              <span>
+                Main service provide karta / karti hoon.
+              </span>
+            </div>
+
+            <div class="fw-role-arrow">
+              ›
+            </div>
+
+          </button>
+
+          <button
+            type="button"
+            class="fw-role-card"
+            data-role="customer"
+          >
+
+            <div class="fw-role-card-icon">
+              🏠
+            </div>
+
+            <div class="fw-role-card-content">
+              <strong>Mujhe Worker Chahiye</strong>
+              <span>
+                Main kisi worker se kaam karwana chahta / chahti hoon.
+              </span>
+            </div>
+
+            <div class="fw-role-arrow">
+              ›
+            </div>
+
+          </button>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  `;
+
+  document.body.appendChild(
+    overlay
+  );
+
+  overlay
+    .querySelectorAll(
+      ".fw-role-card"
+    )
+    .forEach(
+      button => {
+
+        button.addEventListener(
+          "click",
+          () => {
+
+            const role =
+              button.dataset.role;
+
+            localStorage.setItem(
+              "findworker_user_role",
+              role
+            );
+
+            document.body.dataset.findworkerRole =
+              role;
+
+            overlay.remove();
+
+            if(role === "worker"){
+
+              setTimeout(
+                () => {
+                  openWorkerRegistration();
+                },
+                120
+              );
+
+              return;
+
+            }
+
+            if(role === "customer"){
+
+              setTimeout(
+                () => {
+                  openCustomerProfile();
+                },
+                120
+              );
+
+            }
+
+          }
+        );
+
+      }
+    );
+
+}
+
 /* =========================================================
    INITIAL LOAD
 ========================================================= */
 
+showFindWorkerRoleSelection();
+
 loadWorkers();
 
+
+/*
+  Registration button setup after
+  current page elements are ready.
+*/
 
 setupWorkerRegistration();
 setupCustomerRequestsButton();
