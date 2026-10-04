@@ -1894,7 +1894,33 @@ if(
   return;
 
 }
-        if(updateError){
+        if(
+  photoSaveError ||
+  photoSaveResult !== true
+){
+
+  console.error(
+    "Worker photo database update error:",
+    photoSaveError ||
+    "Worker photo was not saved."
+  );
+
+  message.textContent =
+    "Photo upload ho gayi, lekin profile me save nahi ho paayi.";
+
+  uploadButton.disabled =
+    false;
+
+  skipButton.disabled =
+    false;
+
+  uploadButton.textContent =
+    "Upload Profile Photo";
+
+  return;
+
+}
+           
 
           console.error(
             "Worker photo database update error:",
