@@ -2989,7 +2989,7 @@ function openCustomerProfile(){
           </h2>
 
           <p>
-            Ye profile Worker Profile se completely alag hai.
+         
           </p>
 
         </div>
