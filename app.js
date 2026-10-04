@@ -1,49 +1,3 @@
-Pasted text(20261004-063041).txt
-Document
-ful fix replace code text karke bhejna
-
-Bhai, app.js ke bilkul upar Supabase section mein ye line hai:
-
-const SUPABASE_KEY =
-  "sb_publishable_QL9UvmHtxzM9fvZAG8TFnw_UvpOEY3i";
-
-Bas HIDENT ki jagah apni existing Supabase Publishable Key paste karo:
-
-const SUPABASE_KEY =
-  "sb_publishable_QL9UvmHtxzM9fvZAG8TFnw_UvpOEY3i";
-
-SUPABASE_URL ko bilkul change mat karna. Tumhare current code mein ye URL already sahi hai.
-
-Key mujhe chat mein mat bhejna.
-
-Finding workers...
-incognito me ye refreas hi ho raha hai or profile pe kuchh nahi khul raha hai ab batao
-
-Bhai, ab extra code paste mat karo. Problem yehi ho rahi hai ki purane aur naye role-code mix ho gaye hain.
-
-Maine tumhare last known working app ko clean base bana kar role + customer profile wala clean full replacement ready kiya hai. Is version ka syntax verify ho gaya hai.
-
-FindWorker_CLEAN_ROLE_CUSTOMER_FINAL.js — Full replacement
-
-Ab exactly ek kaam: current app.js ko poora delete karke is file ka poora code app.js mein paste karo. Koi purana code neeche add mat karna.
-
-Phir Ctrl + Shift + R karo.
-
-Iske baad:
-I am a Worker → Worker Registration
-Mujhe Worker Chahiye → Customer Profile
-
-Aur ab purana mixed role code nahi chalega.
-
-FindWorker_CLEAN_ROLE_CUSTOMER_FINAL.js
-Code
-text bhejo 
-
-Haan bhai. Tumhare current app ka clean full replacement ready hai; maine syntax bhi verify kiya hai. Tumhare current file mein Worker Registration aur role-selection ke old handlers mix ho rahe the, isi wajah se problem aa rahi thi.
-
-Ek important baat: exact full file 5521 lines ka hai. Chat mein itna bada code ek hi message mein kabhi-kabhi cut ho jata hai. Isliye main 5 parts mein exact text de raha hoon. Part 1 se Part 5 ko order mein ek hi app.js file mein paste karna hai. Beech mein kuch add/remove nahi karna.
-
-PART 1 — lines 1–1100
 /* =========================================================
    FINDWORKER
    APP VERSION 5 + WORKER REGISTRATION
@@ -64,7 +18,7 @@ const SUPABASE_URL =
 */ 
  
 const SUPABASE_KEY = 
-  "HIDENT"; 
+  "sb_publishable_QL9UvmHtxzM9fvZAG8TFnw_UvpOEY3i"; 
  
 const supabaseClient = 
   supabase.createClient( 
