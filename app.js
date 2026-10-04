@@ -18,7 +18,7 @@ const SUPABASE_URL =
 */ 
  
 const SUPABASE_KEY = 
-  "sb_publishable_QL9UvmHtxzM9fvZAG8TFnw_UvpOEY3i"; 
+  "HIDENT"; 
  
 const supabaseClient = 
   supabase.createClient( 
@@ -1240,6 +1240,46 @@ function openRequestServiceForm(
           return;
         }
 
+
+        try{
+
+          const existingRequests =
+            JSON.parse(
+              localStorage.getItem(
+                "findworker_customer_requests"
+              ) ||
+              "[]"
+            );
+
+          existingRequests.unshift({
+            worker_id: worker.id,
+            worker_name: worker.name,
+            service: worker.service,
+            customer_name: customerName,
+            customer_mobile: customerMobile,
+            area: customerArea,
+            request_details: requestDetails,
+            status: "pending",
+            created_at: new Date().toISOString()
+          });
+
+          localStorage.setItem(
+            "findworker_customer_requests",
+            JSON.stringify(
+              existingRequests.slice(0, 30)
+            )
+          );
+
+        }
+        catch(localStorageError){
+
+          console.warn(
+            "Could not save local request history:",
+            localStorageError
+          );
+
+        }
+
         message.textContent =
           "Request sent successfully!";
 
@@ -2353,11 +2393,6 @@ function openWorkerRegistration(){
       }
 
 
-      /*
-        6 YEARS OR MORE
-        = EXPERIENCE PROOF REQUIRED
-      */
-
       if(
         experience >= 6 &&
         !proofFile
@@ -2373,10 +2408,6 @@ function openWorkerRegistration(){
         return;
       }
 
-
-      /*
-        EXPERIENCE PROOF FILE VALIDATION
-      */
 
       if(proofFile){
 
@@ -2398,9 +2429,6 @@ function openWorkerRegistration(){
           return;
         }
 
-        /*
-          Maximum 10 MB
-        */
 
         if(
           proofFile.size >
@@ -2428,15 +2456,6 @@ function openWorkerRegistration(){
         let experienceProofPath =
           null;
 
-
-        /*
-          Upload proof first.
-          Existing bucket:
-          experience-proofs
-
-          Existing policy:
-          Allow worker proof upload
-        */
 
         if(proofFile){
 
@@ -2501,24 +2520,11 @@ function openWorkerRegistration(){
           }
 
 
-          /*
-            Save storage path in workers.experience_proof
-          */
-
           experienceProofPath =
             storagePath;
 
         }
 
-
-        /*
-          CREATE WORKER
-          Initially PENDING
-
-          IMPORTANT:
-          Photo is NOT collected during registration.
-          Profile photo will be added after registration.
-        */
 
         const {
           data: newWorkerId,
@@ -2660,9 +2666,197 @@ function openWorkerRegistration(){
 
 
 /* =========================================================
+   CUSTOMER REQUESTS SCREEN
+========================================================= */
+
+function openCustomerRequests(){
+
+  const old =
+    document.querySelector(
+      ".fw-customer-requests-modal"
+    );
+
+  if(old){
+    old.remove();
+  }
+
+  let requests = [];
+
+  try{
+
+    requests = JSON.parse(
+      localStorage.getItem(
+        "findworker_customer_requests"
+      ) ||
+      "[]"
+    );
+
+  }
+  catch(error){
+
+    console.warn(
+      "Could not read request history:",
+      error
+    );
+
+  }
+
+  const modal =
+    document.createElement(
+      "div"
+    );
+
+  modal.className =
+    "fw-customer-requests-modal";
+
+  modal.innerHTML = `
+
+    <div class="fw-customer-requests-box">
+
+      <button
+        type="button"
+        class="fw-customer-requests-close"
+        aria-label="Close"
+      >
+        ×
+      </button>
+
+      <div class="fw-customer-requests-header">
+
+        <div class="fw-customer-requests-icon">
+          📋
+        </div>
+
+        <div>
+          <h2>My Requests</h2>
+          <p>Service requests you have sent.</p>
+        </div>
+
+      </div>
+
+      <div class="fw-customer-requests-list">
+
+        ${
+          requests.length
+            ? requests.map(
+                request => `
+                  <div class="fw-customer-request-card">
+
+                    <div class="fw-customer-request-top">
+                      <strong>
+                        ${escapeHTML(request.service)}
+                      </strong>
+                      <span class="fw-request-status">
+                        ${escapeHTML(request.status || "pending")}
+                      </span>
+                    </div>
+
+                    <div class="fw-customer-request-worker">
+                      Worker: ${escapeHTML(request.worker_name)}
+                    </div>
+
+                    <div class="fw-customer-request-meta">
+                      📍 ${escapeHTML(request.area)}
+                    </div>
+
+                    ${
+                      request.request_details
+                        ? `<div class="fw-customer-request-details">
+                            ${escapeHTML(request.request_details)}
+                           </div>`
+                        : ""
+                    }
+
+                    <div class="fw-customer-request-date">
+                      ${new Date(
+                        request.created_at
+                      ).toLocaleString()}
+                    </div>
+
+                  </div>
+                `
+              ).join("")
+            : `
+                <div class="fw-customer-no-requests">
+                  <div class="fw-customer-no-requests-icon">📭</div>
+                  <h3>No requests yet</h3>
+                  <p>Your service requests will appear here.</p>
+                </div>
+              `
+        }
+
+      </div>
+
+    </div>
+
+  `;
+
+  document.body.appendChild(
+    modal
+  );
+
+  modal
+    .querySelector(
+      ".fw-customer-requests-close"
+    )
+    .addEventListener(
+      "click",
+      () => modal.remove()
+    );
+
+  modal.addEventListener(
+    "click",
+    event => {
+
+      if(
+        event.target === modal
+      ){
+
+        modal.remove();
+
+      }
+
+    }
+  );
+}
+
+
+function setupCustomerRequestsButton(){
+
+  const requestButtons = [
+    document.getElementById("bottom-requests"),
+    document.querySelector('[data-nav="requests"]')
+  ].filter(Boolean);
+
+  requestButtons.forEach(
+    button => {
+
+      if(
+        button.dataset.findworkerRequestsReady === "1"
+      ){
+        return;
+      }
+
+      button.dataset.findworkerRequestsReady = "1";
+
+      button.addEventListener(
+        "click",
+        event => {
+
+          event.preventDefault();
+
+          openCustomerRequests();
+
+        }
+      );
+
+    }
+  );
+}
+
+
+/* =========================================================
    WORKER REGISTRATION BUTTON
-   Uses existing Profile item if available.
-   Existing customer navigation is otherwise untouched.
 ========================================================= */
 
 function setupWorkerRegistration(){
@@ -2731,12 +2925,6 @@ function setupWorkerRegistration(){
       "click",
       event => {
 
-        /*
-          Existing customer Profile action
-          was not implemented in APP VERSION 5.
-          Therefore Profile opens worker registration.
-        */
-
         event.preventDefault();
 
         openWorkerRegistration();
@@ -2751,8 +2939,6 @@ function setupWorkerRegistration(){
 
 /* =========================================================
    REGISTRATION + REQUEST CSS
-   Added dynamically.
-   Existing style.css remains untouched.
 ========================================================= */
 
 (function addFindWorkerExtraStyles(){
@@ -2779,10 +2965,6 @@ function setupWorkerRegistration(){
 
 
   style.textContent = `
-
-    /* ================================================
-       REQUEST SERVICE
-    ================================================ */
 
     .fw-request-modal,
     #fw-worker-registration{
@@ -2955,6 +3137,197 @@ function setupWorkerRegistration(){
       color:#fff;
       font-weight:700;
       cursor:pointer;
+
+    }
+
+
+    /* ================================================
+       CUSTOMER REQUESTS
+    ================================================ */
+
+    .fw-customer-requests-modal{
+
+      position:fixed;
+      inset:0;
+      z-index:99998;
+      background:rgba(0,0,0,.55);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:18px;
+      box-sizing:border-box;
+
+    }
+
+    .fw-customer-requests-box{
+
+      position:relative;
+      width:100%;
+      max-width:560px;
+      max-height:90vh;
+      overflow-y:auto;
+      background:#fff;
+      border-radius:22px;
+      padding:24px;
+      box-sizing:border-box;
+      box-shadow:0 20px 60px rgba(0,0,0,.25);
+
+    }
+
+    .fw-customer-requests-close{
+
+      position:absolute;
+      right:14px;
+      top:12px;
+      width:36px;
+      height:36px;
+      border:0;
+      border-radius:50%;
+      background:#f1f3f5;
+      font-size:24px;
+      cursor:pointer;
+
+    }
+
+    .fw-customer-requests-header{
+
+      display:flex;
+      align-items:center;
+      gap:12px;
+      padding-right:42px;
+      margin-bottom:18px;
+
+    }
+
+    .fw-customer-requests-icon{
+
+      width:48px;
+      height:48px;
+      border-radius:14px;
+      background:#eef5ff;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size:25px;
+      flex:none;
+
+    }
+
+    .fw-customer-requests-header h2{
+
+      margin:0;
+      color:#172b4d;
+
+    }
+
+    .fw-customer-requests-header p{
+
+      margin:4px 0 0;
+      color:#6b7280;
+      font-size:13px;
+
+    }
+
+    .fw-customer-requests-list{
+
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+
+    }
+
+    .fw-customer-request-card{
+
+      border:1px solid #e3e8ef;
+      border-radius:15px;
+      padding:14px;
+      background:#fff;
+
+    }
+
+    .fw-customer-request-top{
+
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+
+    }
+
+    .fw-customer-request-top strong{
+
+      color:#172b4d;
+      font-size:15px;
+
+    }
+
+    .fw-request-status{
+
+      display:inline-flex;
+      align-items:center;
+      padding:5px 9px;
+      border-radius:999px;
+      background:#fff4db;
+      color:#8a6414;
+      font-size:11px;
+      font-weight:700;
+      text-transform:capitalize;
+
+    }
+
+    .fw-customer-request-worker,
+    .fw-customer-request-meta,
+    .fw-customer-request-details,
+    .fw-customer-request-date{
+
+      margin-top:7px;
+      color:#59636f;
+      font-size:13px;
+      line-height:1.45;
+
+    }
+
+    .fw-customer-request-details{
+
+      padding:9px 10px;
+      background:#f7f9fc;
+      border-radius:10px;
+
+    }
+
+    .fw-customer-request-date{
+
+      font-size:11px;
+      color:#8a919a;
+
+    }
+
+    .fw-customer-no-requests{
+
+      text-align:center;
+      padding:36px 15px;
+      color:#69727d;
+
+    }
+
+    .fw-customer-no-requests-icon{
+
+      font-size:40px;
+      margin-bottom:8px;
+
+    }
+
+    .fw-customer-no-requests h3{
+
+      margin:0 0 6px;
+      color:#172b4d;
+
+    }
+
+    .fw-customer-no-requests p{
+
+      margin:0;
+      font-size:13px;
 
     }
 
@@ -3356,9 +3729,5 @@ function setupWorkerRegistration(){
 loadWorkers();
 
 
-/*
-  Registration button setup after
-  current page elements are ready.
-*/
-
 setupWorkerRegistration();
+setupCustomerRequestsButton();
