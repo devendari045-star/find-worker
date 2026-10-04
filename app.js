@@ -1850,28 +1850,50 @@ function openWorkerPhotoUpload(
         }
 
         const {
-          error:
-            updateError
-        } =
-          await supabaseClient
-            .from("workers")
-            .update({
-              photo_url:
-                publicPhotoURL
-            })
-            .eq(
-              "id",
-              worker.id
-            )
-            .eq(
-              "verification_status",
-              "pending"
-            )
-            .is(
-              "photo_url",
-              null
-            );
+  data: photoSaveResult,
+  error: photoSaveError
+} =
+  await supabaseClient
+    .rpc(
+      "save_worker_photo",
+      {
+        p_worker_id:
+          worker.id,
 
+        p_mobile:
+          worker.mobile,
+
+        p_photo_url:
+          publicPhotoURL
+      }
+    );
+
+if(
+  photoSaveError ||
+  photoSaveResult !== true
+){
+
+  console.error(
+    "Worker photo database update error:",
+    photoSaveError ||
+    "Worker photo was not saved."
+  );
+
+  message.textContent =
+    "Photo upload ho gayi, lekin profile me save nahi ho paayi.";
+
+  uploadButton.disabled =
+    false;
+
+  skipButton.disabled =
+    false;
+
+  uploadButton.textContent =
+    "Upload Profile Photo";
+
+  return;
+
+}
         if(updateError){
 
           console.error(
