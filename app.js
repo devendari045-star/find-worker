@@ -2538,7 +2538,7 @@ function openWorkerRegistration(){
           experience:
             String(experience),
 
-          "starting charge":
+          starting_charge:
             charge,
 
           availability:
