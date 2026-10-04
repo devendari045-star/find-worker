@@ -4942,28 +4942,335 @@ function showFindWorkerRoleSelection(force = false){
 
 if(role === "worker"){
 
-  setTimeout(
-    () => {
+  const workerMobile =
+    localStorage.getItem(
+      "findworker_worker_mobile"
+    );
 
-      const workerMobile =
-        localStorage.getItem(
-          "findworker_worker_mobile"
-        );
+  if(!workerMobile){
 
-      if(workerMobile){
+    openWorkerRegistration();
 
-        openCustomerRequests();
+    return;
+
+  }
+
+  const choiceModal =
+    document.createElement("div");
+
+  choiceModal.style.cssText = `
+    position:fixed;
+    inset:0;
+    z-index:1000010;
+    background:rgba(0,0,0,.58);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:18px;
+    box-sizing:border-box;
+  `;
+
+  choiceModal.innerHTML = `
+
+    <div
+      style="
+        position:relative;
+        width:100%;
+        max-width:430px;
+        background:#fff;
+        border-radius:22px;
+        padding:26px;
+        box-sizing:border-box;
+        box-shadow:0 25px 70px rgba(0,0,0,.28);
+      "
+    >
+
+      <button
+        type="button"
+        class="fw-worker-choice-close"
+        style="
+          position:absolute;
+          right:14px;
+          top:12px;
+          width:36px;
+          height:36px;
+          border:0;
+          border-radius:50%;
+          background:#f1f3f5;
+          font-size:23px;
+          cursor:pointer;
+        "
+      >
+        ×
+      </button>
+
+      <div
+        style="
+          text-align:center;
+          padding:8px 20px 20px;
+        "
+      >
+
+        <div
+          style="
+            width:58px;
+            height:58px;
+            margin:0 auto 12px;
+            border-radius:50%;
+            background:#eef5ff;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            font-size:29px;
+          "
+        >
+          👷
+        </div>
+
+        <h2
+          style="
+            margin:0;
+            color:#172b4d;
+          "
+        >
+          Worker Profile
+        </h2>
+
+        <p
+          style="
+            margin:8px 0 0;
+            color:#6b7280;
+            font-size:13px;
+            line-height:1.5;
+          "
+        >
+          Aapki existing Worker Profile mil gayi hai.
+          Aap existing profile open kar sakte hain
+          ya nayi Worker Profile bana sakte hain.
+        </p>
+
+      </div>
+
+      <div
+        style="
+          display:flex;
+          flex-direction:column;
+          gap:10px;
+        "
+      >
+
+        <button
+          type="button"
+          class="fw-existing-worker-profile"
+          style="
+            width:100%;
+            border:0;
+            border-radius:13px;
+            padding:14px;
+            background:#1769e0;
+            color:#fff;
+            font-size:15px;
+            font-weight:700;
+            cursor:pointer;
+          "
+        >
+          ✅ Meri Existing Profile
+        </button>
+
+        <button
+          type="button"
+          class="fw-new-worker-profile"
+          style="
+            width:100%;
+            border:1px solid #d6dce4;
+            border-radius:13px;
+            padding:14px;
+            background:#fff;
+            color:#4b5563;
+            font-size:15px;
+            font-weight:700;
+            cursor:pointer;
+          "
+        >
+          ➕ New Worker Profile
+        </button>
+
+        <button
+          type="button"
+          class="fw-worker-my-requests"
+          style="
+            width:100%;
+            border:1px solid #d6dce4;
+            border-radius:13px;
+            padding:14px;
+            background:#fff;
+            color:#4b5563;
+            font-size:15px;
+            font-weight:700;
+            cursor:pointer;
+          "
+        >
+          📩 My Requests
+        </button>
+
+      </div>
+
+    </div>
+
+  `;
+
+  document.body.appendChild(
+    choiceModal
+  );
+
+  choiceModal
+    .querySelector(
+      ".fw-worker-choice-close"
+    )
+    .addEventListener(
+      "click",
+      () => {
+        choiceModal.remove();
+      }
+    );
+
+  choiceModal
+    .addEventListener(
+      "click",
+      event => {
+
+        if(
+          event.target ===
+          choiceModal
+        ){
+
+          choiceModal.remove();
+
+        }
 
       }
-      else{
+    );
+
+  choiceModal
+    .querySelector(
+      ".fw-existing-worker-profile"
+    )
+    .addEventListener(
+      "click",
+      async () => {
+
+        const button =
+          choiceModal.querySelector(
+            ".fw-existing-worker-profile"
+          );
+
+        button.disabled = true;
+
+        button.textContent =
+          "Loading Profile...";
+
+        try{
+
+          const {
+            data,
+            error
+          } =
+            await supabaseClient
+              .rpc(
+                "get_worker_profile_by_mobile",
+                {
+                  p_mobile:
+                    workerMobile
+                }
+              );
+
+          if(error){
+
+            console.error(
+              "Worker profile load error:",
+              error
+            );
+
+            button.disabled = false;
+
+            button.textContent =
+              "✅ Meri Existing Profile";
+
+            return;
+
+          }
+
+          const workers =
+            Array.isArray(data)
+              ? data
+              : [];
+
+          if(
+            workers.length === 0
+          ){
+
+            button.disabled = false;
+
+            button.textContent =
+              "✅ Meri Existing Profile";
+
+            return;
+
+          }
+
+          choiceModal.remove();
+
+          showWorkerProfile(
+            workers[0]
+          );
+
+        }
+        catch(error){
+
+          console.error(
+            "Worker profile load failed:",
+            error
+          );
+
+          button.disabled = false;
+
+          button.textContent =
+            "✅ Meri Existing Profile";
+
+        }
+
+      }
+    );
+
+  choiceModal
+    .querySelector(
+      ".fw-new-worker-profile"
+    )
+    .addEventListener(
+      "click",
+      () => {
+
+        choiceModal.remove();
 
         openWorkerRegistration();
 
       }
+    );
 
-    },
-    120
-  );
+  choiceModal
+    .querySelector(
+      ".fw-worker-my-requests"
+    )
+    .addEventListener(
+      "click",
+      () => {
+
+        choiceModal.remove();
+
+        openCustomerRequests();
+
+      }
+    );
 
   return;
 
