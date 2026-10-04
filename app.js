@@ -1930,15 +1930,6 @@ if(
 ========================================================= */
 
 function openWorkerRegistration(){
-const savedWorkerMobile =
-  localStorage.getItem(
-    "findworker_worker_mobile"
-  );
-
-if(savedWorkerMobile){
-  openCustomerRequests();
-  return;
-}
   const old =
     document.getElementById(
       "fw-worker-registration"
