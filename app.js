@@ -699,8 +699,6 @@ function createWorkerCard(
  
       showWorkerProfile( 
         worker 
-      );
-               worker 
       ); 
  
     } 
@@ -2400,7 +2398,6 @@ function openWorkerRegistration(){
           return;
         }
 
-
         /*
           Maximum 10 MB
         */
@@ -2523,52 +2520,42 @@ function openWorkerRegistration(){
           Profile photo will be added after registration.
         */
 
-        const workerData = {
-
-          name:
-            name,
-
-          mobile:
-            mobile,
-
-          service:
-            service,
-
-          area:
-            area,
-
-          experience:
-            String(experience),
-
-          "starting charge":
-            charge,
-
-          availability:
-            availability,
-
-          description:
-            description,
-
-          verification_status:
-            "pending",
-
-          experience_proof:
-            experienceProofPath
-
-        };
-
-
         const {
-          data,
+          data: newWorkerId,
           error
         } =
           await supabaseClient
-            .from("workers")
-            .insert(
-              workerData
-            )
-            .select()
-            .single();
+            .rpc(
+              "register_worker",
+              {
+                p_name:
+                  name,
+
+                p_mobile:
+                  mobile,
+
+                p_service:
+                  service,
+
+                p_area:
+                  area,
+
+                p_experience:
+                  String(experience),
+
+                p_starting_charge:
+                  charge,
+
+                p_availability:
+                  availability,
+
+                p_description:
+                  description,
+
+                p_experience_proof:
+                  experienceProofPath
+              }
+            );
 
 
         if(error){
@@ -2594,7 +2581,7 @@ function openWorkerRegistration(){
 
         console.log(
           "Worker registered:",
-          data
+          newWorkerId
         );
 
 
@@ -2607,7 +2594,43 @@ function openWorkerRegistration(){
 
         openWorkerPhotoUpload(
           modal,
-          data
+          {
+            id:
+              newWorkerId,
+
+            name:
+              name,
+
+            mobile:
+              mobile,
+
+            service:
+              service,
+
+            area:
+              area,
+
+            experience:
+              String(experience),
+
+            starting_charge:
+              charge,
+
+            availability:
+              availability,
+
+            description:
+              description,
+
+            verification_status:
+              "pending",
+
+            photo_url:
+              null,
+
+            experience_proof:
+              experienceProofPath
+          }
         );
 
 
