@@ -1831,25 +1831,7 @@ function openWorkerPhotoUpload(
             ? publicData.publicUrl
             : "";
 
-        if(!publicPhotoURL){
-
-          message.textContent =
-            "Photo URL create nahi ho paaya.";
-
-          uploadButton.disabled =
-            false;
-
-          skipButton.disabled =
-            false;
-
-          uploadButton.textContent =
-            "Upload Profile Photo";
-
-          return;
-
-        }
-
-        const {
+const {
   data: photoSaveResult,
   error: photoSaveError
 } =
@@ -1892,59 +1874,7 @@ if(
     "Upload Profile Photo";
 
   return;
-
 }
-        if(
-  photoSaveError ||
-  photoSaveResult !== true
-){
-
-  console.error(
-    "Worker photo database update error:",
-    photoSaveError ||
-    "Worker photo was not saved."
-  );
-
-  message.textContent =
-    "Photo upload ho gayi, lekin profile me save nahi ho paayi.";
-
-  uploadButton.disabled =
-    false;
-
-  skipButton.disabled =
-    false;
-
-  uploadButton.textContent =
-    "Upload Profile Photo";
-
-  return;
-
-}
-           
-
-          console.error(
-            "Worker photo database update error:",
-            updateError
-          );
-
-          message.textContent =
-            "Photo upload ho gayi, lekin profile me save nahi ho paayi.";
-
-          uploadButton.disabled =
-            false;
-
-          skipButton.disabled =
-            false;
-
-          uploadButton.textContent =
-            "Upload Profile Photo";
-
-          return;
-
-        }
-
-        message.className =
-          "fw-register-message success";
 
         message.innerHTML = `
 
